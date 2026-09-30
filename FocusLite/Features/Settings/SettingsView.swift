@@ -12,11 +12,13 @@ struct SettingsView: View {
             List {
                 if auth.screenTime != .granted {
                     Section {
-                        Label(
-                            "FocusLite n'a pas accès à Temps d'écran. Autorise-le plus bas pour pouvoir bloquer des apps.",
-                            systemImage: "exclamationmark.triangle.fill"
-                        )
-                        .foregroundStyle(.orange)
+                        // The system warning glyph, not orange text: orange is kept for the one focal point.
+                        Label {
+                            Text("FocusLite n'a pas accès à Temps d'écran. Autorise-le plus bas pour pouvoir bloquer des apps.")
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .symbolRenderingMode(.multicolor)
+                        }
                     }
                 }
 
@@ -29,6 +31,7 @@ struct SettingsView: View {
                     Text("Désactivé, toutes tes apps redeviennent accessibles.")
                 }
                 .disabled(auth.screenTime != .granted)
+                .sensoryFeedback(.success, trigger: blocking.isEnabled) { _, enabled in enabled }
 
                 Group {
                     SelectionSection(
@@ -64,7 +67,7 @@ struct SettingsView: View {
             .navigationTitle("Réglages")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { dismiss() }
+                    Button("Fermer", role: .close) { dismiss() }
                 }
             }
         }

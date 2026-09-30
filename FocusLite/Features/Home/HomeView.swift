@@ -36,22 +36,25 @@ private struct ServiceRow: View {
 
     var body: some View {
         HStack(spacing: 16) {
+            // A small echo of the app icon: white glyph on the graphite gradient. Orange is kept for state.
             Image(systemName: service.systemImage)
                 .font(.title2)
                 .foregroundStyle(.white)
                 .frame(width: 48, height: 48)
-                .background(.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            VStack(alignment: .leading, spacing: 2) {
+                .background(.brandGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
                 Text(service.title).font(.headline)
                 Text(service.detail)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-            Spacer()
+            Spacer(minLength: 8)
             Image(systemName: "chevron.forward")
-                .font(.footnote.bold())
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
     }
 }

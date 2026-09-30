@@ -23,18 +23,20 @@ struct SelectionSection: View {
             Button(selection.isEmpty ? "Choisir des apps" : "Modifier la sélection") {
                 showsPicker = true
             }
+            // On the button, not the Section: a List applies a Section's modifiers to every row,
+            // so each selected app would get its own picker, and they'd dismiss each other.
+            .familyActivityPicker(
+                isPresented: $showsPicker,
+                selection: Binding(
+                    get: { settings.selection(for: group) },
+                    set: { settings.setSelection($0, for: group) }
+                )
+            )
         } header: {
             Text(title)
         } footer: {
             Text(footer)
         }
-        .familyActivityPicker(
-            isPresented: $showsPicker,
-            selection: Binding(
-                get: { settings.selection(for: group) },
-                set: { settings.setSelection($0, for: group) }
-            )
-        )
     }
 }
 

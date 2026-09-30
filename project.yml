@@ -57,6 +57,8 @@ targets:
     sources:
       - path: ShieldConfigurationExtension
       - path: FocusLite/Shared
+      # Brand colors only (AccentColor, Ink), without the app icon.
+      - path: FocusLite/Resources/Brand.xcassets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.killianboularand.focuslite.shieldconfig

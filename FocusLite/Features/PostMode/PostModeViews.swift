@@ -7,19 +7,22 @@ struct PostModeToolbarItem: View {
     @Environment(PostModeModel.self) private var postMode
 
     var body: some View {
-        if let endsAt = postMode.endsAt {
-            HStack(spacing: 12) {
-                Countdown(endsAt: endsAt)
-                Menu {
-                    StopButton()
-                } label: {
-                    Image(systemName: "stop.circle")
-                        .accessibilityLabel("Terminer le Mode Poster")
+        Group {
+            if let endsAt = postMode.endsAt {
+                HStack(spacing: 12) {
+                    Countdown(endsAt: endsAt)
+                    Menu {
+                        StopButton()
+                    } label: {
+                        Image(systemName: "stop.circle")
+                            .accessibilityLabel("Terminer le Mode Poster")
+                    }
                 }
+            } else {
+                StartButton(title: "Mode Poster")
             }
-        } else {
-            StartButton(title: "Mode Poster")
         }
+        .sensoryFeedback(.success, trigger: postMode.endsAt) { old, new in old == nil && new != nil }
     }
 }
 
@@ -42,6 +45,7 @@ struct PostModeSection: View {
         } footer: {
             Text("Débloque l'app Instagram pendant 15 minutes, le temps de publier un post ou une story. Les apps en blocage total restent bloquées.")
         }
+        .sensoryFeedback(.success, trigger: postMode.endsAt) { old, new in old == nil && new != nil }
     }
 }
 
@@ -53,6 +57,8 @@ private struct Countdown: View {
             Image(systemName: "timer")
             Text(endsAt, style: .timer).monospacedDigit()
         }
+        .fontDesign(.rounded)
+        .foregroundStyle(.tint)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Mode Poster, temps restant \(Text(endsAt, style: .timer))"))
     }

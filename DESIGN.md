@@ -28,7 +28,7 @@ Two consequences:
 
 ### Tokens
 
-Define these in the asset catalog (Any / Dark appearances), never as hex literals in Swift.
+Define these in `FocusLite/Resources/Brand.xcassets` (Any / Dark appearances), never as hex literals in Swift. That catalog holds colors only, so the Shield Configuration extension can include it without the app icon. The gradient is exposed in Swift as `.brandGradient` (`FocusLite/App/Brand.swift`).
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
@@ -150,12 +150,12 @@ The WebView fills the screen and scrolls under the glass navigation bar. The bar
 - In Settings, the same states appear as a standard `Section` with `LabeledContent`.
 
 ### Shields (`ShieldConfigurationExtension`)
-Shields cannot use SwiftUI or glass. Use `backgroundBlurStyle: .systemThickMaterial`, SF Symbol icon, system label colors for title and subtitle, and the brand accent instead of `.systemBlue`:
+Shields cannot use SwiftUI or glass, and they are a fixed template: no custom layout, no animation, no live timer. Use `backgroundBlurStyle: .systemMaterial` (the blocked app shows through, the text stays readable), SF Symbol icon, system label colors for title and subtitle, the app's `localizedDisplayName` in the copy, and the brand accent instead of `.systemBlue`. One orange focal point per shield:
 
 | Group | Icon | Primary button | Secondary |
 |---|---|---|---|
-| Redirect (Instagram) | `hourglass` | "Ouvrir FocusLite", background Focus Orange, label `Ink` | "Fermer", label Focus Orange |
-| Hard block (TikTok…) | `nosign` | "Fermer", background `.systemGray`, label white | none |
+| Redirect (Instagram) | `hourglass`, untinted | "Ouvrir FocusLite", background Focus Orange, label `Ink` | "Fermer", label Focus Orange |
+| Hard block (TikTok…) | `nosign`, tinted Focus Orange | "Fermer", background `.systemGray`, label white | none |
 
 Pass colors as `UIColor(named: "AccentColor")` from the asset catalog, which must then be a member of the extension target. Keep the extension minimal: no images beyond SF Symbols.
 

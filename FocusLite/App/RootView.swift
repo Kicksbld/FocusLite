@@ -22,7 +22,7 @@ struct RootView: View {
                 HomeView { openService = $0 }
             }
         }
-        .animation(.default, value: openService)
+        .animation(.smooth, value: openService)
         .onOpenURL { router.pending = $0 }
         .onChange(of: router.pending, initial: true) { _, link in
             if let link { handleDeepLink(link) }

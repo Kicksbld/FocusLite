@@ -6,13 +6,14 @@ struct BrowserView: View {
     let model: BrowserModel
     let onClose: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         NavigationStack {
             BrowserWebView(model: model)
                 .ignoresSafeArea(edges: .bottom)
                 .navigationTitle(model.service.title)
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.visible, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: onClose) {
@@ -28,15 +29,20 @@ struct BrowserView: View {
                 .overlay(alignment: .top) {
                     if let toast = model.toast {
                         Label(toast, systemImage: "hand.raised.fill")
-                            .font(.subheadline.bold())
+                            .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(.regularMaterial, in: Capsule())
+                            .padding(.vertical, 12)
+                            .glassEffect(.regular, in: .capsule)
                             .padding(.top, 8)
-                            .transition(.move(edge: .top).combined(with: .opacity))
+                            // Enters and leaves by the same edge; a plain fade with Reduce Motion.
+                            .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                     }
                 }
                 .animation(.snappy, value: model.toast)
+                .sensoryFeedback(.warning, trigger: model.toast) { _, toast in toast != nil }
+                .onChange(of: model.toast) { _, toast in
+                    if let toast { AccessibilityNotification.Announcement(toast).post() }
+                }
         }
     }
 }

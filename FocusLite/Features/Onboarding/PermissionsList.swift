@@ -50,24 +50,33 @@ private struct PermissionRow: View {
     let retryLabel: String
     let action: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.title2)
-                .frame(width: 32)
-                .foregroundStyle(.tint)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline)
-                Text(detail)
-                    .font(.subheadline)
+        // At accessibility sizes the button moves under the text instead of squeezing it.
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: 12))
+        layout {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Image(systemName: systemImage)
+                    .font(.title2)
+                    .frame(width: 32)
                     .foregroundStyle(.secondary)
-                if state == .denied {
-                    Text("Refusée")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(.red)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.headline)
+                    Text(detail)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if state == .denied {
+                        Text("Refusée")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.red)
+                    }
                 }
             }
-            Spacer()
+            Spacer(minLength: 0)
             switch state {
             case .granted:
                 Image(systemName: "checkmark.circle.fill")
@@ -75,11 +84,15 @@ private struct PermissionRow: View {
                     .foregroundStyle(.green)
                     .accessibilityLabel("Autorisée")
             case .notDetermined:
+                // Tinted, not filled: the screen's one prominent button is the one at the bottom.
                 Button(requestLabel, action: action)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
             case .denied:
                 Button(retryLabel, action: action)
                     .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
+                    .tint(.secondary)
             }
         }
         .padding(.vertical, 4)
