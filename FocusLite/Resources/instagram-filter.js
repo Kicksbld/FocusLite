@@ -4,6 +4,7 @@
   // src/policy.ts
   var DEFAULT_CONFIG = { allowSingleReels: true };
   var BLOCKED_PREFIXES = ["/reels/", "/explore/"];
+  var ALLOWED_PREFIXES = ["/explore/search/"];
   var SINGLE_REEL_PREFIX = "/reel/";
   function normalizePath(pathname) {
     let path = pathname;
@@ -16,6 +17,7 @@
   }
   function isBlockedPath(pathname, config2) {
     const path = normalizePath(pathname);
+    if (ALLOWED_PREFIXES.some((prefix) => path.startsWith(prefix))) return false;
     if (BLOCKED_PREFIXES.some((prefix) => path.startsWith(prefix))) return true;
     return !config2.allowSingleReels && path.startsWith(SINGLE_REEL_PREFIX);
   }
@@ -32,10 +34,11 @@
     }
     return isInstagramHost(parsed.hostname) && isBlockedPath(parsed.pathname, config2);
   }
-  var HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap((prefix) => [
-    `a[href^="${prefix}"]`,
-    `a[href^="https://www.instagram.com${prefix}"]`
-  ]);
+  var hrefPrefixes = (prefix) => [prefix, `https://www.instagram.com${prefix}`];
+  var allowedLinks = ALLOWED_PREFIXES.flatMap(hrefPrefixes).map((href) => `:not([href^="${href}"])`).join("");
+  var HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap(hrefPrefixes).map(
+    (href) => `a[href^="${href}"]${allowedLinks}`
+  );
 
   // src/instagram-filter.ts
   var STYLE_ID = "focuslite-filter";

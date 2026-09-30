@@ -10,9 +10,12 @@ export const DEFAULT_CONFIG: FilterConfig = { allowSingleReels: true };
 
 /**
  * Always blocked. `/reels/` also covers `/reels/<id>/`, which opens a reel inside
- * the scrollable Reels feed. `/explore/` also covers search, tags and locations.
+ * the scrollable Reels feed. `/explore/` also covers tags, locations and people.
  */
 const BLOCKED_PREFIXES = ["/reels/", "/explore/"];
+
+/** Exceptions to `BLOCKED_PREFIXES`: account search lives under Explore on mobile. */
+const ALLOWED_PREFIXES = ["/explore/search/"];
 
 const SINGLE_REEL_PREFIX = "/reel/";
 
@@ -30,6 +33,7 @@ function normalizePath(pathname: string): string {
 
 export function isBlockedPath(pathname: string, config: FilterConfig): boolean {
   const path = normalizePath(pathname);
+  if (ALLOWED_PREFIXES.some((prefix) => path.startsWith(prefix))) return false;
   if (BLOCKED_PREFIXES.some((prefix) => path.startsWith(prefix))) return true;
   return !config.allowSingleReels && path.startsWith(SINGLE_REEL_PREFIX);
 }
@@ -50,8 +54,13 @@ export function isBlockedURL(url: string | URL, base: string, config: FilterConf
   return isInstagramHost(parsed.hostname) && isBlockedPath(parsed.pathname, config);
 }
 
-/** Links to hide. Covers relative and absolute hrefs. */
-export const HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap((prefix) => [
-  `a[href^="${prefix}"]`,
-  `a[href^="https://www.instagram.com${prefix}"]`,
-]);
+const hrefPrefixes = (prefix: string) => [prefix, `https://www.instagram.com${prefix}`];
+
+/** Links to hide: blocked prefixes minus the allowed ones. Covers relative and absolute hrefs. */
+const allowedLinks = ALLOWED_PREFIXES.flatMap(hrefPrefixes)
+  .map((href) => `:not([href^="${href}"])`)
+  .join("");
+
+export const HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap(hrefPrefixes).map(
+  (href) => `a[href^="${href}"]${allowedLinks}`,
+);

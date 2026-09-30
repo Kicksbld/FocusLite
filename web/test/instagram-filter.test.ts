@@ -12,7 +12,7 @@ function load(path = "/", config?: object) {
   // Messages are copied out of the jsdom realm so deepEqual compares plain objects.
   // jsdom does not implement navigation: location.replace only logs, which we silence.
   const dom = new JSDOM(
-    `<body><nav><a href="/">Home</a><a href="/reels/">R</a><a href="/explore/">E</a>` +
+    `<body><nav><a href="/">Home</a><a href="/reels/">R</a><a href="/explore/">E</a><a href="/explore/search/">S</a>` +
       `<a href="/reel/C0abc/">One reel</a><a href="/direct/inbox/">DM</a></nav></body>`,
     { url: `https://www.instagram.com${path}`, runScripts: "outside-only", pretendToBeVisual: true, virtualConsole: new VirtualConsole() },
   );
@@ -39,6 +39,7 @@ test("hides Reels and Explore links only", () => {
   assert.equal(display("/reels/"), "none");
   assert.equal(display("/explore/"), "none");
   assert.notEqual(display("/direct/inbox/"), "none");
+  assert.notEqual(display("/explore/search/"), "none");
   assert.notEqual(display("/reel/C0abc/"), "none");
 });
 

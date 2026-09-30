@@ -12,8 +12,14 @@ test("blocks the Reels feed and its sub-paths", () => {
 });
 
 test("blocks Explore and its sub-paths", () => {
-  for (const path of ["/explore/", "/explore", "/explore/tags/cats/", "/explore/search/", "/explore/locations/1/"]) {
+  for (const path of ["/explore/", "/explore", "/explore/tags/cats/", "/explore/locations/1/", "/explore/people/", "/explore/searching/"]) {
     assert.equal(isBlockedPath(path, DEFAULT_CONFIG), true, path);
+  }
+});
+
+test("allows search under Explore", () => {
+  for (const path of ["/explore/search/", "/explore/search", "/explore/search/keyword/", "/explore/search/results/"]) {
+    assert.equal(isBlockedPath(path, DEFAULT_CONFIG), false, path);
   }
 });
 

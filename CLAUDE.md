@@ -79,7 +79,7 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 
 ### Instagram filtering (two layers)
 
-- **Native**: `WKNavigationDelegate.decidePolicyFor` applies `URLPolicy` to full page loads. It blocks `/reels/…` and `/explore/…`, and allows single reels `/reel/<id>/` when `allowSingleReels` is on. Everything else on instagram.com is allowed. External domains open in Safari. A blocked navigation is cancelled and shows a "Reels bloqués" toast.
+- **Native**: `WKNavigationDelegate.decidePolicyFor` applies `URLPolicy` to full page loads. It blocks `/reels/…` and `/explore/…` except search (`/explore/search/…`), and allows single reels `/reel/<id>/` when `allowSingleReels` is on. Everything else on instagram.com is allowed. External domains open in Safari. A blocked navigation is cancelled and shows a "Reels bloqués" toast.
 - **Injected JS** (`web/src/instagram-filter.ts`, injected at `.atDocumentStart`): instagram.com is a React SPA that changes pages through `history.pushState`/`replaceState`, which native code never sees. The script therefore patches `pushState`/`replaceState`, listens to `popstate`, posts `{ type: "navigation", url }` to `window.webkit.messageHandlers.focuslite`, and blocks forbidden paths on the JS side too. It also hides Reels and Explore links with CSS, re-applied by a throttled `MutationObserver`. It reads a native-injected config object (e.g. `allowSingleReels`) and must be idempotent.
 - **Selector rule**: target `href` attributes and URL paths only. Never use Instagram's obfuscated CSS classes or UI text, because both change often and the text depends on the interface language.
 - The script must stay testable on its own by pasting it into the console of desktop Safari in iPhone responsive mode.

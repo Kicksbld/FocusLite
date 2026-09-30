@@ -196,6 +196,7 @@ DeviceActivityMonitorExtension/
 |---|---|
 | `/reels/` et sous-chemins (feed des Reels) | **Bloqué** |
 | `/explore/` et sous-chemins | **Bloqué** |
+| `/explore/search/` et sous-chemins (recherche de comptes) | **Autorisé** (décision du 30/09/2026, exception à la ligne précédente) |
 | `/reel/<id>/` (reel unique, typiquement reçu en DM) | **Autorisé**, via un réglage `allowSingleReels` (défaut : `true`) |
 | `/direct/…`, `/stories/…`, `/p/…`, profils, `/accounts/…` | Autorisé |
 | Tout le reste sur instagram.com | Autorisé par défaut |
