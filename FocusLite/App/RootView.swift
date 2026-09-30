@@ -13,10 +13,15 @@ struct RootView: View {
                 OnboardingView { onboardingCompleted = true }
             }
         }
-        // Permissions can be revoked in Settings while the app is in the background.
+        // Permissions can be revoked in Settings while the app is in the background,
+        // and the shields must match the stored state (safety net).
         .onChange(of: scenePhase, initial: true) { _, phase in
-            if phase == .active {
-                Task { await auth.refresh() }
+            guard phase == .active else { return }
+            Task {
+                await auth.refresh()
+                if auth.screenTime == .granted {
+                    BlockingManager.applyExpectedState()
+                }
             }
         }
     }
@@ -25,4 +30,5 @@ struct RootView: View {
 #Preview {
     RootView()
         .environment(AuthorizationManager())
+        .environment(BlockingSettings())
 }
