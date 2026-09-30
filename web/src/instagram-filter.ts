@@ -7,12 +7,14 @@
 //   2. history.pushState / replaceState: skipped, then redirect to "/";
 //   3. popstate and the initial URL: redirect to "/";
 //   4. CSS hiding the Reels / Explore links, kept in place by a MutationObserver.
+// Redirected paths (`/explore/`, the target of Instagram's search button) open their
+// target instead, with a full page load, at the same four points.
 //
 // Messages posted to window.webkit.messageHandlers.focuslite:
 //   { type: "navigation", url }  the URL changed to an allowed page
 //   { type: "blocked", url }     a navigation to `url` was blocked (native shows a toast)
 
-import { DEFAULT_CONFIG, HIDDEN_LINK_SELECTORS, type FilterConfig, isBlockedURL } from "./policy.ts";
+import { DEFAULT_CONFIG, HIDDEN_LINK_SELECTORS, type FilterConfig, isBlockedURL, redirectTarget } from "./policy.ts";
 
 type FilterMessage = { type: "navigation" | "blocked"; url: string };
 
@@ -49,7 +51,13 @@ function absolute(url: string | URL): string {
   return new URL(url, location.href).href;
 }
 
-function redirectHome(blockedUrl: string | URL): void {
+/** Leaves a blocked URL: to its redirect target if it has one, else home with a "blocked" message. */
+function leave(blockedUrl: string | URL): void {
+  const target = redirectTarget(blockedUrl, location.href);
+  if (target) {
+    location.replace(target);
+    return;
+  }
   post({ type: "blocked", url: absolute(blockedUrl) });
   location.replace(HOME);
 }
@@ -74,7 +82,12 @@ function onClick(event: MouseEvent): void {
   if (!(link instanceof HTMLAnchorElement) || !isBlocked(link.href)) return;
   event.preventDefault();
   event.stopImmediatePropagation();
-  post({ type: "blocked", url: link.href });
+  const redirect = redirectTarget(link.href, location.href);
+  if (redirect) {
+    location.assign(redirect);
+  } else {
+    post({ type: "blocked", url: link.href });
+  }
 }
 
 // 2. History API
@@ -91,7 +104,7 @@ function patchHistory(method: "pushState" | "replaceState"): void {
   const original = history[method];
   history[method] = function (this: History, data: unknown, unused: string, url?: string | URL | null) {
     if (url != null && isBlocked(url)) {
-      redirectHome(url);
+      leave(url);
       return;
     }
     original.call(this, data, unused, url);
@@ -103,7 +116,7 @@ function patchHistory(method: "pushState" | "replaceState"): void {
 
 function checkCurrentLocation(): void {
   if (isBlocked(location.href)) {
-    redirectHome(location.href);
+    leave(location.href);
   } else {
     notifyNavigation();
   }

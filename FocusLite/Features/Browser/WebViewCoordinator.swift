@@ -49,6 +49,9 @@ extension WebViewCoordinator: WKNavigationDelegate {
         case .openExternally:
             await UIApplication.shared.open(url)
             return .cancel
+        case .redirect(let target):
+            webView.load(URLRequest(url: target))
+            return .cancel
         }
     }
 
@@ -95,9 +98,14 @@ extension WebViewCoordinator: WKScriptMessageHandler {
             model.showBlockedToast()
         case "navigation":
             // The script already filters; if the two policies ever disagree, native wins.
-            if model.decision(for: url) == .block {
+            switch model.decision(for: url) {
+            case .block:
                 model.showBlockedToast()
                 model.open(URLPolicy.home)
+            case .redirect:
+                model.open(url)
+            case .allow, .openExternally:
+                break
             }
         default:
             break

@@ -84,6 +84,12 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 - **Selector rule**: target `href` attributes and URL paths only. Never use Instagram's obfuscated CSS classes or UI text, because both change often and the text depends on the interface language.
 - The script must stay testable on its own by pasting it into the console of desktop Safari in iPhone responsive mode.
 - The WebView uses `WKWebsiteDataStore.default()` (the session persists) and a recent iOS Safari User-Agent (to get the mobile site).
+- `/explore/` (the target of Instagram's own search button) redirects to `/explore/search/`, in both `URLPolicy` and the script.
+
+### Navigation and chrome
+
+- The app launches on `HomeView`, a list of services (`Service`: Instagram, YouTube later). Deep links open a service directly.
+- Inside a service, a thin native top bar holds FocusLite actions only ("Accueil" back to the list, later "Mode Poster"). Never duplicate the site's own navigation in native UI: back is the edge swipe, reload is pull-to-refresh.
 
 ## Rules from the spec (§3, §8)
 

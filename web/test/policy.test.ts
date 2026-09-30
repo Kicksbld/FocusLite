@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DEFAULT_CONFIG, isBlockedPath, isBlockedURL } from "../src/policy.ts";
+import { DEFAULT_CONFIG, isBlockedPath, isBlockedURL, redirectTarget } from "../src/policy.ts";
 
 const base = "https://www.instagram.com/";
 const noSingleReels = { allowSingleReels: false };
@@ -43,4 +43,12 @@ test("resolves relative and absolute URLs, ignores other hosts", () => {
   assert.equal(isBlockedURL("https://example.com/reels/", base, DEFAULT_CONFIG), false);
   assert.equal(isBlockedURL("https://notinstagram.com/reels/", base, DEFAULT_CONFIG), false);
   assert.equal(isBlockedURL("/direct/inbox/", base, DEFAULT_CONFIG), false);
+});
+
+test("redirects the Explore root to search, and nothing else", () => {
+  assert.equal(redirectTarget("/explore/", base), "/explore/search/");
+  assert.equal(redirectTarget("https://www.instagram.com/explore", base), "/explore/search/");
+  assert.equal(redirectTarget("/explore/tags/cats/", base), null);
+  assert.equal(redirectTarget("/reels/", base), null);
+  assert.equal(redirectTarget("https://example.com/explore/", base), null);
 });

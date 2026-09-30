@@ -9,17 +9,19 @@ enum URLPolicy {
         case block
         /// Not instagram.com: open in Safari.
         case openExternally
+        /// Load this URL instead, without a toast.
+        case redirect(URL)
     }
 
     static let home = URL(string: "https://www.instagram.com/")!
-    static let inbox = URL(string: "https://www.instagram.com/direct/inbox/")!
-    static let search = URL(string: "https://www.instagram.com/explore/search/")!
 
     /// `/reels/` also covers `/reels/<id>/`, which opens a reel inside the scrollable Reels feed.
     private static let blockedPrefixes = ["/reels/", "/explore/"]
     /// Exceptions to `blockedPrefixes`: account search lives under Explore on mobile.
     private static let allowedPrefixes = ["/explore/search/"]
     private static let singleReelPrefix = "/reel/"
+    /// Instagram's own search button links to `/explore/`: open search rather than the Explore grid.
+    private static let redirects = ["/explore/": URL(string: "https://www.instagram.com/explore/search/")!]
 
     static func decision(for url: URL, allowSingleReels: Bool) -> Decision {
         switch url.scheme?.lowercased() {
@@ -33,17 +35,22 @@ enum URLPolicy {
         guard let host = url.host()?.lowercased(), isInstagramHost(host) else {
             return .openExternally
         }
-        return isBlockedPath(url.path(percentEncoded: false), allowSingleReels: allowSingleReels) ? .block : .allow
+        let path = normalizedPath(url.path(percentEncoded: false))
+        if let target = redirects[path] { return .redirect(target) }
+        return isBlockedPath(path, allowSingleReels: allowSingleReels) ? .block : .allow
     }
 
     private static func isInstagramHost(_ host: String) -> Bool {
         host == "instagram.com" || host.hasSuffix(".instagram.com")
     }
 
-    private static func isBlockedPath(_ rawPath: String, allowSingleReels: Bool) -> Bool {
-        let lowercased = rawPath.lowercased()
-        // Trailing slash so `/reels` matches `/reels/`.
-        let path = lowercased.hasSuffix("/") ? lowercased : lowercased + "/"
+    /// Lowercased, with a trailing slash so `/reels` matches `/reels/`.
+    private static func normalizedPath(_ rawPath: String) -> String {
+        let path = rawPath.lowercased()
+        return path.hasSuffix("/") ? path : path + "/"
+    }
+
+    private static func isBlockedPath(_ path: String, allowSingleReels: Bool) -> Bool {
         if allowedPrefixes.contains(where: path.hasPrefix) { return false }
         if blockedPrefixes.contains(where: path.hasPrefix) { return true }
         return !allowSingleReels && path.hasPrefix(singleReelPrefix)

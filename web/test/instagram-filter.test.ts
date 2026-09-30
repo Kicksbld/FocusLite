@@ -12,7 +12,7 @@ function load(path = "/", config?: object) {
   // Messages are copied out of the jsdom realm so deepEqual compares plain objects.
   // jsdom does not implement navigation: location.replace only logs, which we silence.
   const dom = new JSDOM(
-    `<body><nav><a href="/">Home</a><a href="/reels/">R</a><a href="/explore/">E</a><a href="/explore/search/">S</a>` +
+    `<body><nav><a href="/">Home</a><a href="/reels/">R</a><a href="/explore/">E</a><a href="/explore/search/">S</a><a href="/explore/tags/cats/">T</a>` +
       `<a href="/reel/C0abc/">One reel</a><a href="/direct/inbox/">DM</a></nav></body>`,
     { url: `https://www.instagram.com${path}`, runScripts: "outside-only", pretendToBeVisual: true, virtualConsole: new VirtualConsole() },
   );
@@ -33,11 +33,12 @@ function click(document: Document, href: string) {
   return event;
 }
 
-test("hides Reels and Explore links only", () => {
+test("hides Reels and Explore links, keeps search and the search button", () => {
   const { window, document } = load();
   const display = (href: string) => window.getComputedStyle(document.querySelector(`a[href="${href}"]`)!).display;
   assert.equal(display("/reels/"), "none");
-  assert.equal(display("/explore/"), "none");
+  assert.equal(display("/explore/tags/cats/"), "none");
+  assert.notEqual(display("/explore/"), "none");
   assert.notEqual(display("/direct/inbox/"), "none");
   assert.notEqual(display("/explore/search/"), "none");
   assert.notEqual(display("/reel/C0abc/"), "none");
@@ -60,7 +61,7 @@ test("reports allowed history navigation and refuses blocked ones", () => {
   assert.deepEqual(messages.at(-1), { type: "navigation", url: "https://www.instagram.com/direct/inbox/" });
 
   window.history.pushState({}, "", "/reels/C0abc/");
-  window.history.replaceState({}, "", "/explore/");
+  window.history.replaceState({}, "", "/explore/tags/cats/");
   assert.equal(window.location.pathname, "/direct/inbox/");
   assert.deepEqual(messages.slice(-2).map((m) => m.type), ["blocked", "blocked"]);
 });
@@ -68,6 +69,15 @@ test("reports allowed history navigation and refuses blocked ones", () => {
 test("blocks a blocked initial URL", () => {
   const { messages } = load("/reels/");
   assert.deepEqual(messages, [{ type: "blocked", url: "https://www.instagram.com/reels/" }]);
+});
+
+test("the search button opens search instead of Explore, without a blocked message", () => {
+  const { window, document, messages } = load();
+  assert.equal(click(document, "/explore/").defaultPrevented, true);
+  window.history.pushState({}, "", "/explore/");
+  assert.equal(window.location.pathname, "/");
+  assert.equal(messages.some((m) => m.type === "blocked"), false);
+  assert.deepEqual(load("/explore/").messages, []);
 });
 
 test("single reels follow the native config", () => {

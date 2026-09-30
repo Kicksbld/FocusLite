@@ -6,6 +6,7 @@
   var BLOCKED_PREFIXES = ["/reels/", "/explore/"];
   var ALLOWED_PREFIXES = ["/explore/search/"];
   var SINGLE_REEL_PREFIX = "/reel/";
+  var REDIRECTS = /* @__PURE__ */ new Map([["/explore/", "/explore/search/"]]);
   function normalizePath(pathname) {
     let path = pathname;
     try {
@@ -34,8 +35,21 @@
     }
     return isInstagramHost(parsed.hostname) && isBlockedPath(parsed.pathname, config2);
   }
+  function redirectTarget(url, base) {
+    let parsed;
+    try {
+      parsed = new URL(url, base);
+    } catch {
+      return null;
+    }
+    if (!isInstagramHost(parsed.hostname)) return null;
+    return REDIRECTS.get(normalizePath(parsed.pathname)) ?? null;
+  }
   var hrefPrefixes = (prefix) => [prefix, `https://www.instagram.com${prefix}`];
-  var allowedLinks = ALLOWED_PREFIXES.flatMap(hrefPrefixes).map((href) => `:not([href^="${href}"])`).join("");
+  var allowedLinks = [
+    ...ALLOWED_PREFIXES.flatMap(hrefPrefixes).map((href) => `:not([href^="${href}"])`),
+    ...[...REDIRECTS.keys()].flatMap(hrefPrefixes).map((href) => `:not([href="${href}"])`)
+  ].join("");
   var HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap(hrefPrefixes).map(
     (href) => `a[href^="${href}"]${allowedLinks}`
   );
@@ -60,7 +74,12 @@
   function absolute(url) {
     return new URL(url, location.href).href;
   }
-  function redirectHome(blockedUrl) {
+  function leave(blockedUrl) {
+    const target = redirectTarget(blockedUrl, location.href);
+    if (target) {
+      location.replace(target);
+      return;
+    }
     post({ type: "blocked", url: absolute(blockedUrl) });
     location.replace(HOME);
   }
@@ -78,7 +97,12 @@
     if (!(link instanceof HTMLAnchorElement) || !isBlocked(link.href)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    post({ type: "blocked", url: link.href });
+    const redirect = redirectTarget(link.href, location.href);
+    if (redirect) {
+      location.assign(redirect);
+    } else {
+      post({ type: "blocked", url: link.href });
+    }
   }
   var lastNotifiedUrl = "";
   function notifyNavigation() {
@@ -90,7 +114,7 @@
     const original = history[method];
     history[method] = function(data, unused, url) {
       if (url != null && isBlocked(url)) {
-        redirectHome(url);
+        leave(url);
         return;
       }
       original.call(this, data, unused, url);
@@ -99,7 +123,7 @@
   }
   function checkCurrentLocation() {
     if (isBlocked(location.href)) {
-      redirectHome(location.href);
+      leave(location.href);
     } else {
       notifyNavigation();
     }

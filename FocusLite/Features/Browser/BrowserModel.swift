@@ -3,19 +3,17 @@ import UIKit
 import WebKit
 
 /// Owns the Instagram WebView for the app's whole lifetime, so the page survives
-/// sheet presentations, and exposes the commands of the native toolbar.
+/// going back to the home screen.
 @MainActor
 @Observable
 final class BrowserModel {
     let webView: WKWebView
-    private(set) var canGoBack = false
     /// Message of the toast currently shown, if any.
     private(set) var toast: String?
     private(set) var allowSingleReels: Bool
 
     @ObservationIgnored private let coordinator = WebViewCoordinator()
     @ObservationIgnored private let filterScript: String
-    @ObservationIgnored private var canGoBackObservation: NSKeyValueObservation?
     @ObservationIgnored private var toastTask: Task<Void, Never>?
 
     init() {
@@ -34,6 +32,7 @@ final class BrowserModel {
 
         webView.navigationDelegate = coordinator
         webView.uiDelegate = coordinator
+        // Back is the edge swipe, reload is pull-to-refresh: no native buttons for either.
         webView.allowsBackForwardNavigationGestures = true
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(coordinator, action: #selector(WebViewCoordinator.pullToRefresh(_:)), for: .valueChanged)
@@ -42,10 +41,6 @@ final class BrowserModel {
         // Lets desktop Safari's Web Inspector attach to the WebView.
         webView.isInspectable = true
         #endif
-
-        canGoBackObservation = webView.observe(\.canGoBack, options: [.initial, .new]) { [weak self] webView, _ in
-            MainActor.assumeIsolated { self?.canGoBack = webView.canGoBack }
-        }
 
         webView.load(URLRequest(url: URLPolicy.home))
     }
@@ -60,11 +55,8 @@ final class BrowserModel {
         case .allow: webView.load(URLRequest(url: url))
         case .block: showBlockedToast()
         case .openExternally: UIApplication.shared.open(url)
+        case .redirect(let target): webView.load(URLRequest(url: target))
         }
-    }
-
-    func goBack() {
-        webView.goBack()
     }
 
     func reload() {

@@ -19,6 +19,12 @@ const ALLOWED_PREFIXES = ["/explore/search/"];
 
 const SINGLE_REEL_PREFIX = "/reel/";
 
+/**
+ * Blocked paths that open another page instead of being blocked. Instagram's own
+ * search button links to `/explore/`: it opens search rather than the Explore grid.
+ */
+const REDIRECTS = new Map([["/explore/", "/explore/search/"]]);
+
 /** Lowercased, percent-decoded, with a trailing slash so `/reels` matches `/reels/`. */
 function normalizePath(pathname: string): string {
   let path = pathname;
@@ -54,12 +60,25 @@ export function isBlockedURL(url: string | URL, base: string, config: FilterConf
   return isInstagramHost(parsed.hostname) && isBlockedPath(parsed.pathname, config);
 }
 
+/** Path to open instead of `url`, if `url` is one of the `REDIRECTS`. */
+export function redirectTarget(url: string | URL, base: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url, base);
+  } catch {
+    return null;
+  }
+  if (!isInstagramHost(parsed.hostname)) return null;
+  return REDIRECTS.get(normalizePath(parsed.pathname)) ?? null;
+}
+
 const hrefPrefixes = (prefix: string) => [prefix, `https://www.instagram.com${prefix}`];
 
-/** Links to hide: blocked prefixes minus the allowed ones. Covers relative and absolute hrefs. */
-const allowedLinks = ALLOWED_PREFIXES.flatMap(hrefPrefixes)
-  .map((href) => `:not([href^="${href}"])`)
-  .join("");
+/** Links to hide: blocked prefixes minus the allowed ones and the redirected ones. */
+const allowedLinks = [
+  ...ALLOWED_PREFIXES.flatMap(hrefPrefixes).map((href) => `:not([href^="${href}"])`),
+  ...[...REDIRECTS.keys()].flatMap(hrefPrefixes).map((href) => `:not([href="${href}"])`),
+].join("");
 
 export const HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap(hrefPrefixes).map(
   (href) => `a[href^="${href}"]${allowedLinks}`,

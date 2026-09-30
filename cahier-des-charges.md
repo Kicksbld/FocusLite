@@ -184,10 +184,9 @@ DeviceActivityMonitorExtension/
 - `WKWebView` avec `WKWebsiteDataStore.default()`, pour que la session reste connectée entre les lancements.
 - User-Agent : Safari mobile iOS récent, pour obtenir la version mobile d'instagram.com.
 - Page d'accueil : `https://www.instagram.com/`.
-- Barre native minimale au-dessus ou en dessous de la WebView :
-  - accueil, messages (`/direct/inbox/`), retour, recharger ;
-  - bouton "Mode Poster" (F5).
-- Pull-to-refresh si simple à mettre en place.
+- Écran d'accueil FocusLite au lancement : liste des services (Instagram, puis YouTube en V2) et accès aux réglages. Un deep link (F6) ouvre directement le service, sans passer par cet écran. *(Décision du 30/09/2026.)*
+- Barre native fine **en haut** de la WebView, réservée aux actions FocusLite : bouton "Accueil" (retour à la liste des services) et bouton "Mode Poster" (F5). Pas de barre native en bas : la navigation dans Instagram passe par la barre du site. Retour = glissement depuis le bord gauche, recharger = pull-to-refresh. *(Décision du 30/09/2026, remplace la barre accueil / messages / retour / recharger.)*
+- Le lien `/explore/` (bouton de recherche d'Instagram) ouvre `/explore/search/` au lieu de la grille Explorer.
 - Les liens vers des domaines externes s'ouvrent dans Safari (`SFSafariViewController` ou `UIApplication.open`).
 
 **Règles d'URL (`URLPolicy.swift`)**
@@ -323,4 +322,4 @@ Chaque étape doit compiler et être testable avant de passer à la suivante. Un
 
 - En mode `.individual`, l'utilisateur peut révoquer l'autorisation dans Réglages ou supprimer l'app. C'est un outil de friction, pas un contrôle parental.
 - Le filtrage web peut casser si Instagram modifie sa structure d'URLs. Le script doit être facile à mettre à jour.
-- La WebView ne reçoit pas de notifications push. Les notifications de DMs viennent de l'app Instagram native (bloquée mais installée). **Recommandation :** dans l'app native, désactiver toutes les notifications sauf les messages.
+- La WebView ne reçoit pas de notifications push. Et iOS masque aussi les notifications d'une app bloquée par un shield Screen Time, sans API pour les autoriser : **pas de notifications de DMs tant qu'Instagram est bloqué**. Limite acceptée le 30/09/2026 : les DMs se consultent en ouvrant FocusLite.
