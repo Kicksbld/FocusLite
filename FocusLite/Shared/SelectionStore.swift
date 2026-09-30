@@ -51,4 +51,11 @@ enum SelectionStore {
         get { AppGroup.defaults.bool(forKey: AppGroup.Key.blockingEnabled) }
         set { AppGroup.defaults.set(newValue, forKey: AppGroup.Key.blockingEnabled) }
     }
+
+    /// End of Post Mode, `nil` when it isn't running. Can be in the past if the Monitor extension
+    /// missed the end: `BlockingManager.applyExpectedState()` then clears it.
+    static var postModeEndsAt: Date? {
+        get { AppGroup.defaults.object(forKey: AppGroup.Key.postModeEndsAt) as? Date }
+        set { AppGroup.defaults.set(newValue, forKey: AppGroup.Key.postModeEndsAt) }
+    }
 }

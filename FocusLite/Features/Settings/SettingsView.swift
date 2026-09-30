@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings sheet, opened from the browser toolbar: blocking, app pickers, browser and permissions.
+/// Settings sheet, opened from the home screen: blocking, app pickers, Post Mode, browser and permissions.
 struct SettingsView: View {
     @Environment(AuthorizationManager.self) private var auth
     @Environment(BlockingSettings.self) private var blocking
@@ -43,6 +43,12 @@ struct SettingsView: View {
                     )
                 }
                 .disabled(auth.screenTime != .granted)
+
+                Section {
+                    PostModeButton()
+                } footer: {
+                    Text("Débloque Instagram 15 minutes pour publier depuis l'app. Le blocage dur reste actif.")
+                }
 
                 Section {
                     Toggle("Autoriser les reels uniques", isOn: Binding(

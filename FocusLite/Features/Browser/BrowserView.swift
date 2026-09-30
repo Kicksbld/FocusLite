@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Filtered Instagram. The site's own bottom bar handles navigation inside Instagram;
-/// the thin top bar only holds FocusLite actions (home screen, and Post Mode with F5).
+/// the thin top bar only holds FocusLite actions (home screen, Post Mode).
 struct BrowserView: View {
     let onClose: () -> Void
 
@@ -19,6 +19,9 @@ struct BrowserView: View {
                         Button(action: onClose) {
                             Label("Accueil", systemImage: "square.grid.2x2")
                         }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        PostModeButton()
                     }
                 }
                 .overlay(alignment: .top) {

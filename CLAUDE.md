@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FocusLite is a personal iOS app (single user, sideloaded on the developer's iPhone). It combines two ideas: Opal-style app blocking through the Screen Time API, and SocialLite-style filtered Instagram (a `WKWebView` with injected JS/CSS that removes Reels and Explore).
 
-The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 7 (F3, custom shields) are done. When you add new tooling, add its commands to the "Commands" section below.
+The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 8 (F5, Post Mode) are done, so the MVP is complete. When you add new tooling, add its commands to the "Commands" section below.
 
 ## Commands
 
@@ -74,8 +74,8 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 ### Cross-component flows
 
 - **Shield redirect**: a Shield Action extension cannot open an app. The "Ouvrir FocusLite" button therefore schedules an immediate local notification whose `userInfo` carries `focuslite://open?path=/direct/inbox/`, then returns `.close`. The app's `UNUserNotificationCenterDelegate` handles the tap and routes the deep link to the WebView. The deep link path must go through `URLPolicy`.
-- **Post Mode**: remove the redirect-group tokens from the shield (hard-block apps stay blocked), store `postMode.endsAt = now + 15 min`, then start a non-repeating `DeviceActivityCenter` monitor over that interval. `DeviceActivityMonitorExtension.intervalDidEnd` re-applies the shields and clears `endsAt`. 15 minutes is the minimum `DeviceActivitySchedule` interval. Build the `DateComponents` with the full date so an interval that crosses midnight still works.
-- **Safety net**: on every launch and every return to foreground, the app re-applies the expected shield state, including the case where `postMode.endsAt` has already passed.
+- **Post Mode** (`PostModeModel`): store `postMode.endsAt = now + 15 min`, start a non-repeating `DeviceActivityCenter` monitor over that interval, and only then re-apply the shields. While `endsAt` is in the future, `BlockingManager` leaves the redirect-group tokens out (a token also in the hard block group stays blocked). If `startMonitoring` throws, clear `endsAt`, re-apply and show the error. `DeviceActivityMonitorExtension.intervalDidEnd` clears `endsAt` and re-applies the shields. 15 minutes is the minimum `DeviceActivitySchedule` interval. `PostModeInterval` builds the `DateComponents` with the full date so an interval that crosses midnight still works.
+- **Safety net**: on every launch and every return to foreground, the app re-applies the expected shield state. `BlockingManager.applyExpectedState()` clears a `postMode.endsAt` that has already passed, so every caller covers that case.
 
 ### Instagram filtering (two layers)
 
@@ -90,7 +90,7 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 
 - The app launches on `HomeView`, a list of services (`Service`: Instagram, YouTube later). Deep links open a service directly.
 - Deep links (`Shared/DeepLink.swift`) come from the `focuslite://` scheme (`onOpenURL`) or a notification tap (`AppDelegate`, the `UNUserNotificationCenterDelegate` set at launch). Both go through `DeepLinkRouter.pending`, handled in one place in `RootView`.
-- Inside a service, a thin native top bar holds FocusLite actions only ("Accueil" back to the list, later "Mode Poster"). Never duplicate the site's own navigation in native UI: back is the edge swipe, reload is pull-to-refresh.
+- Inside a service, a thin native top bar holds FocusLite actions only ("Accueil" back to the list, "Mode Poster" and its countdown). Never duplicate the site's own navigation in native UI: back is the edge swipe, reload is pull-to-refresh.
 
 ## Rules from the spec (§3, §8)
 
