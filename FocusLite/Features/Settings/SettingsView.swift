@@ -44,11 +44,7 @@ struct SettingsView: View {
                 }
                 .disabled(auth.screenTime != .granted)
 
-                Section {
-                    PostModeButton()
-                } footer: {
-                    Text("Débloque Instagram 15 minutes pour publier depuis l'app. Le blocage dur reste actif.")
-                }
+                PostModeSection()
 
                 Section {
                     Toggle("Autoriser les reels uniques", isOn: Binding(

@@ -21,7 +21,7 @@ struct BrowserView: View {
                         }
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        PostModeButton()
+                        PostModeToolbarItem()
                     }
                 }
                 .overlay(alignment: .top) {
