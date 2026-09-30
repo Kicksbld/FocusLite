@@ -43,7 +43,7 @@ struct PostModeSection: View {
         } header: {
             Text("Mode Poster")
         } footer: {
-            Text("Débloque l'app Instagram pendant 15 minutes, le temps de publier un post ou une story. Les apps en blocage total restent bloquées.")
+            Text("Débloque les apps en redirection pendant 15 minutes, le temps de publier un post ou une story. Les apps en blocage total restent bloquées.")
         }
         .sensoryFeedback(.success, trigger: postMode.endsAt) { old, new in old == nil && new != nil }
     }

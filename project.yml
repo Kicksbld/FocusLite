@@ -15,7 +15,8 @@ settings:
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
     TARGETED_DEVICE_FAMILY: "1"
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0.0"
+    # Build number: increase it before every App Store Connect upload.
     CURRENT_PROJECT_VERSION: "1"
 
 targets:
@@ -33,6 +34,10 @@ targets:
       path: FocusLite/Info.plist
       properties:
         CFBundleDisplayName: FocusLite
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # HTTPS only: exempt from export compliance, so App Store Connect skips the question.
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -65,7 +70,9 @@ targets:
     info:
       path: ShieldConfigurationExtension/Info.plist
       properties:
-        CFBundleDisplayName: ShieldConfigurationExtension
+        CFBundleDisplayName: FocusLite Shield
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.ManagedSettingsUI.shield-configuration-service
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShieldConfigurationExtension
@@ -88,7 +95,9 @@ targets:
     info:
       path: ShieldActionExtension/Info.plist
       properties:
-        CFBundleDisplayName: ShieldActionExtension
+        CFBundleDisplayName: FocusLite Shield Action
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.ManagedSettings.shield-action-service
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShieldActionExtension
@@ -111,7 +120,9 @@ targets:
     info:
       path: DeviceActivityMonitorExtension/Info.plist
       properties:
-        CFBundleDisplayName: DeviceActivityMonitorExtension
+        CFBundleDisplayName: FocusLite Monitor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension
