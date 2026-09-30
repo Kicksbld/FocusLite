@@ -1,0 +1,17 @@
+{
+  "name": "focuslite-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/instagram-filter.ts --bundle --format=iife --target=safari17 --banner:js='// Generated from web/src by `npm run build`. Do not edit.' --outfile=../FocusLite/Resources/instagram-filter.js",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run -s build && node --test"
+  },
+  "devDependencies": {
+    "@types/jsdom": "30.0.0",
+    "@types/node": "26.6.3",
+    "esbuild": "0.28.2",
+    "jsdom": "29.1.1",
+    "typescript": "7.0.2"
+  }
+}

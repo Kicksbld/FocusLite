@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FocusLite is a personal iOS app (single user, sideloaded on the developer's iPhone). It combines two ideas: Opal-style app blocking through the Screen Time API, and SocialLite-style filtered Instagram (a `WKWebView` with injected JS/CSS that removes Reels and Explore).
 
-The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 3 (F2) are done. There is no `web/` package yet. When you add new tooling, add its commands to the "Commands" section below.
+The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 4 (F4, JS part) are done. When you add new tooling, add its commands to the "Commands" section below.
 
 ## Commands
 
@@ -18,6 +18,15 @@ xcodebuild -project FocusLite.xcodeproj -scheme FocusLite \
   -destination 'generic/platform=iOS Simulator' build  # simulator build
 xcodebuild -project FocusLite.xcodeproj -scheme FocusLite \
   -destination 'generic/platform=iOS' -allowProvisioningUpdates build  # signed device build
+```
+
+The filter script lives in `web/`. Its build output, `FocusLite/Resources/instagram-filter.js`, is committed so the Xcode build does not need Node. Never edit it by hand: change `web/src/`, then rebuild.
+
+```bash
+cd web && npm install     # once
+npm run build             # web/src/instagram-filter.ts → FocusLite/Resources/instagram-filter.js
+npm test                  # rebuild, then run URL policy tests and jsdom tests of the built script
+npm run typecheck         # tsc --noEmit
 ```
 
 Signing: team `CNLG2XPDKN`, bundle prefix `com.killianboularand.focuslite`, App Group `group.com.killianboularand.focuslite`. The project uses Swift 6 language mode. The Screen Time frameworks are not `Sendable`-annotated, so declare their static names as computed properties (see `Shared/ActivityNames.swift`).
