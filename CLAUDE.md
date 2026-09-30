@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FocusLite is a personal iOS app (single user, sideloaded on the developer's iPhone). It combines two ideas: Opal-style app blocking through the Screen Time API, and SocialLite-style filtered Instagram (a `WKWebView` with injected JS/CSS that removes Reels and Explore).
 
-The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 6 (F6, deep links) are done. When you add new tooling, add its commands to the "Commands" section below.
+The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 7 (F3, custom shields) are done. When you add new tooling, add its commands to the "Commands" section below.
 
 ## Commands
 

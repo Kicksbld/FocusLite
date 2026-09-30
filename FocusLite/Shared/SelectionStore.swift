@@ -1,5 +1,6 @@
 import FamilyControls
 import Foundation
+import ManagedSettings
 
 /// The two app groups. A token's behavior comes from the group it belongs to,
 /// since `ApplicationToken`s are opaque.
@@ -29,6 +30,21 @@ enum SelectionStore {
     static func save(_ selection: FamilyActivitySelection, for group: SelectionGroup) {
         guard let data = try? JSONEncoder().encode(selection) else { return }
         AppGroup.defaults.set(data, forKey: group.key)
+    }
+
+    /// Group of a blocked app, found by its token (the extensions never see app names).
+    /// Hard block wins if a token is in both groups. `nil` if the token is in neither.
+    static func group(of application: ApplicationToken) -> SelectionGroup? {
+        if selection(for: .hardBlock).applicationTokens.contains(application) { return .hardBlock }
+        if selection(for: .redirect).applicationTokens.contains(application) { return .redirect }
+        return nil
+    }
+
+    /// Same as `group(of:)`, for an app shielded through one of its categories.
+    static func group(of category: ActivityCategoryToken) -> SelectionGroup? {
+        if selection(for: .hardBlock).categoryTokens.contains(category) { return .hardBlock }
+        if selection(for: .redirect).categoryTokens.contains(category) { return .redirect }
+        return nil
     }
 
     static var blockingEnabled: Bool {
