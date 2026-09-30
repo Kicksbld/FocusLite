@@ -31,7 +31,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
                 backgroundBlurStyle: .systemThickMaterial,
                 icon: UIImage(systemName: "hourglass"),
                 title: label("Instagram est en pause", .label),
-                subtitle: label("Utilise FocusLite pour tes messages et tes posts", .secondaryLabel),
+                subtitle: label("Tes messages, posts et stories t'attendent dans FocusLite, sans les Reels.", .secondaryLabel),
                 primaryButtonLabel: label("Ouvrir FocusLite", .white),
                 primaryButtonBackgroundColor: .systemBlue,
                 secondaryButtonLabel: label("Fermer", .systemBlue)
@@ -40,8 +40,8 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             ShieldConfiguration(
                 backgroundBlurStyle: .systemThickMaterial,
                 icon: UIImage(systemName: "nosign"),
-                title: label("Bloqué", .label),
-                subtitle: label("Tu as décidé de t'en passer. Tiens bon.", .secondaryLabel),
+                title: label("App bloquée", .label),
+                subtitle: label("Tu as choisi de t'en passer. Tiens bon.", .secondaryLabel),
                 primaryButtonLabel: label("Fermer", .white),
                 primaryButtonBackgroundColor: .systemGray
             )

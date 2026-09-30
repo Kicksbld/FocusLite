@@ -26,10 +26,11 @@ iOS interdit à une app de modifier une autre app. La stratégie est donc :
 
 - Autorisation Screen Time en mode individuel.
 - Sélection des apps à bloquer, en deux groupes :
-  - **Groupe "Redirection"** (Instagram) : bloqué, l'écran de blocage propose d'ouvrir la version Lite.
-  - **Groupe "Blocage dur"** (TikTok) : bloqué, sans échappatoire.
+  - **Groupe "Redirection"** (Instagram) : bloqué, l'écran de blocage propose d'ouvrir la version filtrée dans FocusLite.
+  - **Groupe "Blocage total"** (TikTok) : bloqué, sans échappatoire. *(Appelé "Blocage dur" jusqu'au 30/09/2026.)*
 - Écran de blocage personnalisé (shield).
 - Navigateur Instagram filtré (WebView + script injecté).
+- Navigateur YouTube sans Shorts, même principe. *(Décision du 30/09/2026 : avancé depuis la V2, voir F4.)*
 - Mode Poster : déverrouillage temporaire d'Instagram natif puis rebloquage automatique.
 - Deep link vers une page précise de la WebView (ex. l'inbox des DMs).
 
@@ -42,12 +43,14 @@ iOS interdit à une app de modifier une autre app. La stratégie est donc :
 - YouTube Shorts.
 - Compteur de DMs non lus.
 
+(YouTube Shorts est sorti de cette liste le 30/09/2026 : voir F4, section YouTube.)
+
 ---
 
 ## 3. Contraintes techniques
 
 - **Langage / UI :** Swift, SwiftUI.
-- **iOS minimum :** 17.0.
+- **iOS minimum :** 26.0, pour utiliser Liquid Glass sans code de repli. *(Décision du 30/09/2026, remplace 17.0.)*
 - **Frameworks Apple :** `FamilyControls`, `ManagedSettings`, `ManagedSettingsUI`, `DeviceActivity`, `WebKit`, `UserNotifications`.
 - **Entitlement :** `com.apple.developer.family-controls` sur **l'app principale et chaque extension**.
   - En développement : il suffit d'ajouter la capability "Family Controls" dans Xcode.
@@ -131,7 +134,7 @@ DeviceActivityMonitorExtension/
 
 - Deux `FamilyActivityPicker` distincts :
   - **Redirection** : l'utilisateur y met Instagram.
-  - **Blocage dur** : l'utilisateur y met TikTok (et autres).
+  - **Blocage total** : l'utilisateur y met TikTok (et autres).
 - Les deux `FamilyActivitySelection` sont sérialisées (Codable → JSON) dans les `UserDefaults` de l'App Group.
 - `BlockingManager` applique les shields via un `ManagedSettingsStore` nommé :
   - `shield.applications` = union des `applicationTokens` des deux groupes ;
@@ -154,11 +157,11 @@ DeviceActivityMonitorExtension/
 - Charger les sélections depuis l'App Group et déterminer le groupe du token de l'app bloquée.
 - **Groupe Redirection :**
   - titre : "Instagram est en pause" ;
-  - sous-titre : "Utilise FocusLite pour tes messages et tes posts" ;
+  - sous-titre : "Tes messages, posts et stories t'attendent dans FocusLite, sans les Reels." ;
   - bouton principal : "Ouvrir FocusLite" ;
   - bouton secondaire : "Fermer".
-- **Groupe Blocage dur :**
-  - titre : "Bloqué" ;
+- **Groupe Blocage total :**
+  - titre : "App bloquée" ;
   - sous-titre court et dissuasif ;
   - un seul bouton : "Fermer".
 - Style sobre et cohérent avec l'app (couleurs, icône).
@@ -167,7 +170,7 @@ DeviceActivityMonitorExtension/
 
 - Une extension Shield Action **ne peut pas ouvrir une app directement**.
 - Bouton "Ouvrir FocusLite" (groupe Redirection) :
-  - planifier une notification locale immédiate ("Touche pour ouvrir Instagram Lite") ;
+  - planifier une notification locale immédiate ("Touche pour ouvrir tes messages Instagram, sans les Reels.") ;
   - mettre dans `userInfo` un deep link, par défaut `focuslite://open?path=/direct/inbox/` ;
   - répondre `.close`.
 - Bouton "Fermer" : `.close`.
@@ -184,7 +187,7 @@ DeviceActivityMonitorExtension/
 - `WKWebView` avec `WKWebsiteDataStore.default()`, pour que la session reste connectée entre les lancements.
 - User-Agent : Safari mobile iOS récent, pour obtenir la version mobile d'instagram.com.
 - Page d'accueil : `https://www.instagram.com/`.
-- Écran d'accueil FocusLite au lancement : liste des services (Instagram, puis YouTube en V2) et accès aux réglages. Un deep link (F6) ouvre directement le service, sans passer par cet écran. *(Décision du 30/09/2026.)*
+- Écran d'accueil FocusLite au lancement : liste des services (Instagram, YouTube) et accès aux réglages. Un deep link (F6) ouvre directement le service, sans passer par cet écran. *(Décision du 30/09/2026.)*
 - Barre native fine **en haut** de la WebView, réservée aux actions FocusLite : bouton "Accueil" (retour à la liste des services) et bouton "Mode Poster" (F5). Pas de barre native en bas : la navigation dans Instagram passe par la barre du site. Retour = glissement depuis le bord gauche, recharger = pull-to-refresh. *(Décision du 30/09/2026, remplace la barre accueil / messages / retour / recharger.)*
 - Le lien `/explore/` (bouton de recherche d'Instagram) ouvre `/explore/search/` au lieu de la grille Explorer.
 - Les liens vers des domaines externes s'ouvrent dans Safari (`SFSafariViewController` ou `UIApplication.open`).
@@ -234,6 +237,16 @@ Le script doit :
 - Un reel reçu en DM s'ouvre si `allowSingleReels == true`, mais ne permet pas de basculer vers le feed Reels.
 - La session reste connectée après un redémarrage de l'app.
 - Le script peut être testé dans Safari desktop (mode responsive iPhone) en le collant dans la console, avant toute intégration native.
+
+**YouTube sans Shorts** *(décision du 30/09/2026)*
+
+- Deuxième service de l'écran d'accueil, même principe que le navigateur Instagram : WebView sur `https://m.youtube.com/`, session persistante, User-Agent Safari iOS, script `youtube-filter.js` généré depuis `/web`.
+- Règle d'URL : tout chemin contenant le segment exact `shorts` est **bloqué**, soit `/shorts/<id>` (le lecteur, qui fait défiler les Shorts suivants) et l'onglet Shorts d'une chaîne (`/@nom/shorts`). Un handle comme `/@nom.shorts` reste autorisé. Toast : "Shorts bloqués".
+- Domaines gardés dans la WebView : `youtube.com` et ses sous-domaines, `youtu.be` et `google.com` (connexion via `accounts.google.com`, consentement cookies). Le reste s'ouvre dans Safari.
+- Masquage : les liens `/shorts/…` et les conteneurs de Shorts, par leurs noms d'éléments (`ytm-reel-shelf-renderer`, `ytm-shorts-lockup-view-model`…). Ce sont des noms de composants, pas des classes obfusquées.
+- Pas de Mode Poster pour YouTube. L'app YouTube native n'a pas de traitement dédié : pour la bloquer, la mettre dans "Blocage total" (le bouton du groupe Redirection ouvre Instagram).
+
+> ⚠️ À vérifier sur iPhone : (1) Google peut refuser la connexion dans une WebView ("navigateur non sécurisé") ; YouTube reste alors utilisable sans compte. (2) Les noms d'éléments des étagères de Shorts sont déduits des noms de renderers de `ytInitialData`, pas observés dans le DOM.
 
 ### F5 — Mode Poster
 
@@ -306,13 +319,13 @@ Chaque étape doit compiler et être testable avant de passer à la suivante. Un
 
 **V1 — couche Opal**
 - Friction pour débloquer : attente de 30 s, phrase à taper, nombre de déblocages limité par jour.
-- Plages horaires (ex. aucun accès Instagram Lite avant midi).
+- Plages horaires (ex. aucun accès à Instagram avant midi).
 - Statistiques via une extension `DeviceActivityReport`.
 - Masquer les vidéos courtes et les "Suggestions pour vous" dans le feed d'accueil web.
 
 **V2 — échappatoires et extension**
 - Bloquer instagram.com et tiktok.com dans Safari (`ManagedSettings` web domains). ⚠️ À vérifier : que ça n'affecte pas la WebView de FocusLite.
-- YouTube sans Shorts (même principe de wrapper).
+- ~~YouTube sans Shorts (même principe de wrapper).~~ Fait le 30/09/2026, voir F4.
 - Compteur de DMs non lus lu depuis la WebView.
 - Préparation App Store : demande d'entitlement de distribution pour les 4 bundle IDs, page de confidentialité, icône.
 

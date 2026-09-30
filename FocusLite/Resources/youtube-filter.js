@@ -114,49 +114,39 @@
     checkCurrentLocation();
   }
 
-  // src/instagram-policy.ts
-  var BLOCKED_PREFIXES = ["/reels/", "/explore/"];
-  var ALLOWED_PREFIXES = ["/explore/search/"];
-  var SINGLE_REEL_PREFIX = "/reel/";
-  var REDIRECTS = /* @__PURE__ */ new Map([["/explore/", "/explore/search/"]]);
-  function isBlockedPath(pathname, config2) {
-    const path = normalizePath(pathname);
-    if (ALLOWED_PREFIXES.some((prefix) => path.startsWith(prefix))) return false;
-    if (BLOCKED_PREFIXES.some((prefix) => path.startsWith(prefix))) return true;
-    return !config2.allowSingleReels && path.startsWith(SINGLE_REEL_PREFIX);
+  // src/youtube-policy.ts
+  function isBlockedPath(pathname) {
+    return normalizePath(pathname).split("/").includes("shorts");
   }
-  function isInstagramHost(hostname) {
+  function isYouTubeHost(hostname) {
     const host = hostname.toLowerCase();
-    return host === "instagram.com" || host.endsWith(".instagram.com");
+    return host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be";
   }
-  function isBlockedURL(url, base, config2) {
+  function isBlockedURL(url, base) {
     let parsed;
     try {
       parsed = new URL(url, base);
     } catch {
       return false;
     }
-    return isInstagramHost(parsed.hostname) && isBlockedPath(parsed.pathname, config2);
+    return isYouTubeHost(parsed.hostname) && isBlockedPath(parsed.pathname);
   }
-  function redirectTarget(url, base) {
-    let parsed;
-    try {
-      parsed = new URL(url, base);
-    } catch {
-      return null;
-    }
-    if (!isInstagramHost(parsed.hostname)) return null;
-    return REDIRECTS.get(normalizePath(parsed.pathname)) ?? null;
-  }
-  var hrefPrefixes = (prefix) => [prefix, `https://www.instagram.com${prefix}`];
-  var allowedLinks = [
-    ...ALLOWED_PREFIXES.flatMap(hrefPrefixes).map((href) => `:not([href^="${href}"])`),
-    ...[...REDIRECTS.keys()].flatMap(hrefPrefixes).map((href) => `:not([href="${href}"])`)
-  ].join("");
-  var HIDDEN_LINK_SELECTORS = BLOCKED_PREFIXES.flatMap(hrefPrefixes).map(
-    (href) => `a[href^="${href}"]${allowedLinks}`
-  );
+  var hrefs = (path) => [path, `https://m.youtube.com${path}`, `https://www.youtube.com${path}`];
+  var HIDDEN_SELECTORS = [
+    // Shorts, and a channel's Shorts tab.
+    ...hrefs("/shorts/").map((href) => `a[href^="${href}"]`),
+    'a[href$="/shorts"]',
+    'a[href$="/shorts/"]',
+    // Containers of Shorts, so no empty shelf remains. Element names follow YouTube's renderer
+    // names (`pivotBarRenderer` is `<ytm-pivot-bar-renderer>`), but these ones are unverified on
+    // the live site. Harmless if they match nothing: the links above are hidden anyway.
+    "ytm-shorts-lockup-view-model",
+    "ytm-shorts-lockup-view-model-v2",
+    "ytm-reel-shelf-renderer",
+    'grid-shelf-view-model:has(a[href^="/shorts/"])',
+    'ytm-grid-shelf-view-model:has(a[href^="/shorts/"])'
+  ];
 
-  // src/instagram-filter.ts
-  installFilter({ isBlockedURL, redirectTarget, hiddenSelectors: HIDDEN_LINK_SELECTORS });
+  // src/youtube-filter.ts
+  installFilter({ isBlockedURL, redirectTarget: () => null, hiddenSelectors: HIDDEN_SELECTORS });
 })();

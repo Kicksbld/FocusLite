@@ -70,11 +70,11 @@ final class PostModeModel {
     private static func reason(for error: any Error) -> String {
         guard let error = error as? DeviceActivityCenter.MonitoringError else { return error.localizedDescription }
         return switch error {
-        case .intervalTooShort: "iOS refuse un intervalle de moins de 15 minutes."
-        case .intervalTooLong: "iOS refuse un intervalle aussi long."
-        case .invalidDateComponents: "iOS refuse les dates de l'intervalle."
-        case .unauthorized: "Temps d'écran n'est pas autorisé."
-        case .excessiveActivities: "Trop de surveillances Temps d'écran sont déjà actives."
+        case .intervalTooShort: "iOS n'accepte pas une durée de moins de 15 minutes."
+        case .intervalTooLong: "iOS n'accepte pas une durée aussi longue."
+        case .invalidDateComponents: "iOS n'a pas accepté l'heure de fin. Réessaie dans quelques minutes."
+        case .unauthorized: "FocusLite n'a pas accès à Temps d'écran."
+        case .excessiveActivities: "Trop de suivis Temps d'écran sont déjà en cours."
         @unknown default: error.localizedDescription
         }
     }

@@ -8,7 +8,7 @@ struct PermissionsList: View {
     var body: some View {
         PermissionRow(
             title: "Temps d'écran",
-            detail: "Nécessaire pour bloquer Instagram et TikTok.",
+            detail: "Nécessaire pour bloquer des apps comme Instagram ou TikTok.",
             systemImage: "hourglass",
             state: auth.screenTime,
             requestLabel: "Autoriser",
@@ -24,7 +24,7 @@ struct PermissionsList: View {
 
         PermissionRow(
             title: "Notifications",
-            detail: "Permettent d'ouvrir FocusLite depuis l'écran de blocage.",
+            detail: "Servent à ouvrir FocusLite depuis l'écran de blocage.",
             systemImage: "bell.badge",
             state: auth.notifications,
             requestLabel: "Autoriser",

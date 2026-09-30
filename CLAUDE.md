@@ -20,11 +20,11 @@ xcodebuild -project FocusLite.xcodeproj -scheme FocusLite \
   -destination 'generic/platform=iOS' -allowProvisioningUpdates build  # signed device build
 ```
 
-The filter script lives in `web/`. Its build output, `FocusLite/Resources/instagram-filter.js`, is committed so the Xcode build does not need Node. Never edit it by hand: change `web/src/`, then rebuild.
+The filter scripts live in `web/`. Their build output, `FocusLite/Resources/instagram-filter.js` and `youtube-filter.js`, is committed so the Xcode build does not need Node. Never edit it by hand: change `web/src/`, then rebuild.
 
 ```bash
 cd web && npm install     # once
-npm run build             # web/src/instagram-filter.ts → FocusLite/Resources/instagram-filter.js
+npm run build             # web/src/{instagram,youtube}-filter.ts → FocusLite/Resources/*-filter.js
 npm test                  # rebuild, then run URL policy tests and jsdom tests of the built script
 npm run typecheck         # tsc --noEmit
 ```
@@ -46,7 +46,7 @@ Follow spec §7 in order. Each step must compile and be testable before the next
 
 ## Architecture
 
-Swift + SwiftUI, iOS 17.0 minimum. No third-party Swift dependencies. `web/` uses only TypeScript and esbuild.
+Swift + SwiftUI, iOS 26.0 minimum (for Liquid Glass, see `DESIGN.md`). No third-party Swift dependencies. `web/` uses only TypeScript and esbuild.
 
 ### Four targets, one App Group
 
@@ -80,7 +80,7 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 ### Instagram filtering (two layers)
 
 - **Native**: `WKNavigationDelegate.decidePolicyFor` applies `URLPolicy` to full page loads. It blocks `/reels/…` and `/explore/…` except search (`/explore/search/…`), and allows single reels `/reel/<id>/` when `allowSingleReels` is on. Everything else on instagram.com is allowed. External domains open in Safari. A blocked navigation is cancelled and shows a "Reels bloqués" toast.
-- **Injected JS** (`web/src/instagram-filter.ts`, injected at `.atDocumentStart`): instagram.com is a React SPA that changes pages through `history.pushState`/`replaceState`, which native code never sees. The script therefore patches `pushState`/`replaceState`, listens to `popstate`, posts `{ type: "navigation", url }` (allowed URL change) or `{ type: "blocked", url }` (native shows the toast) to `window.webkit.messageHandlers.focuslite`, and blocks forbidden paths on the JS side too. It also hides Reels and Explore links with CSS, re-applied by a throttled `MutationObserver`. It reads a native-injected config object (e.g. `allowSingleReels`) and must be idempotent.
+- **Injected JS** (`web/src/instagram-filter.ts`, injected at `.atDocumentStart`; the engine is `web/src/filter.ts`, shared with `youtube-filter.ts`): instagram.com is a React SPA that changes pages through `history.pushState`/`replaceState`, which native code never sees. The script therefore patches `pushState`/`replaceState`, listens to `popstate`, posts `{ type: "navigation", url }` (allowed URL change) or `{ type: "blocked", url }` (native shows the toast) to `window.webkit.messageHandlers.focuslite`, and blocks forbidden paths on the JS side too. It also hides Reels and Explore links with CSS, re-applied by a throttled `MutationObserver`. It reads a native-injected config object (e.g. `allowSingleReels`) and must be idempotent.
 - **Selector rule**: target `href` attributes and URL paths only. Never use Instagram's obfuscated CSS classes or UI text, because both change often and the text depends on the interface language.
 - The script must stay testable on its own by pasting it into the console of desktop Safari in iPhone responsive mode.
 - The WebView uses `WKWebsiteDataStore.default()` (the session persists) and a recent iOS Safari User-Agent (to get the mobile site).
@@ -88,7 +88,8 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 
 ### Navigation and chrome
 
-- The app launches on `HomeView`, a list of services (`Service`: Instagram, YouTube later). Deep links open a service directly.
+- The app launches on `HomeView`, a list of services (`Service`: Instagram, YouTube). Deep links open Instagram directly.
+- **YouTube** (`m.youtube.com`): same wrapper, one `BrowserModel` per service in `BrowserStore` (YouTube's is created on first open). `URLPolicy` and `web/src/youtube-policy.ts` block any path with a `shorts` segment. Selectors: `href`s, paths and YouTube's `ytm-*` element names, never classes or UI text. No Post Mode there.
 - Deep links (`Shared/DeepLink.swift`) come from the `focuslite://` scheme (`onOpenURL`) or a notification tap (`AppDelegate`, the `UNUserNotificationCenterDelegate` set at launch). Both go through `DeepLinkRouter.pending`, handled in one place in `RootView`.
 - Inside a service, a thin native top bar holds FocusLite actions only ("Accueil" back to the list, "Mode Poster" and its countdown). Never duplicate the site's own navigation in native UI: back is the edge swipe, reload is pull-to-refresh.
 

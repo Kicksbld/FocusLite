@@ -20,7 +20,7 @@ struct SelectionSection: View {
             ForEach(Array(selection.categoryTokens), id: \.self) { token in
                 Label(token)
             }
-            Button(selection.isEmpty ? "Choisir des apps" : "Modifier") {
+            Button(selection.isEmpty ? "Choisir des apps" : "Modifier la sélection") {
                 showsPicker = true
             }
         } header: {

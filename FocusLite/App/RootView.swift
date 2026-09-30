@@ -3,7 +3,7 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @Environment(AuthorizationManager.self) private var auth
-    @Environment(BrowserModel.self) private var browser
+    @Environment(BrowserStore.self) private var browsers
     @Environment(PostModeModel.self) private var postMode
     @Environment(DeepLinkRouter.self) private var router
     @Environment(\.scenePhase) private var scenePhase
@@ -15,9 +15,9 @@ struct RootView: View {
             if !onboardingCompleted {
                 OnboardingView { onboardingCompleted = true }
             } else if let service = openService {
-                switch service {
-                case .instagram: BrowserView { openService = nil }
-                }
+                BrowserView(model: browsers.model(for: service)) { openService = nil }
+                    // A new view per service: its WebView is created once, in makeUIView.
+                    .id(service)
             } else {
                 HomeView { openService = $0 }
             }
@@ -48,7 +48,7 @@ struct RootView: View {
         router.pending = nil
         guard onboardingCompleted, let target = DeepLink.instagramURL(from: link) else { return }
         openService = .instagram
-        browser.open(target)
+        browsers.instagram.open(target)
     }
 }
 
@@ -56,7 +56,7 @@ struct RootView: View {
     RootView()
         .environment(AuthorizationManager())
         .environment(BlockingSettings())
-        .environment(BrowserModel())
+        .environment(BrowserStore())
         .environment(PostModeModel())
         .environment(DeepLinkRouter())
 }

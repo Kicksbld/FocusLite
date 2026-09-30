@@ -1,29 +1,20 @@
 import Foundation
 
-/// URL rules of the Instagram browser (spec F4), applied to full page loads.
-/// Keep in sync with `web/src/policy.ts`, which applies the same rules to in-page navigation.
+/// URL rules of the filtered browsers (spec F4), applied to full page loads.
+/// Keep in sync with `web/src/instagram-policy.ts` and `web/src/youtube-policy.ts`,
+/// which apply the same rules to in-page navigation.
 enum URLPolicy {
     enum Decision: Equatable {
         case allow
-        /// Reels or Explore: cancel and show the "Reels bloqués" toast.
+        /// Reels, Explore or Shorts: cancel and show the service's toast.
         case block
-        /// Not instagram.com: open in Safari.
+        /// Not the service's site: open in Safari.
         case openExternally
         /// Load this URL instead, without a toast.
         case redirect(URL)
     }
 
-    static let home = URL(string: "https://www.instagram.com/")!
-
-    /// `/reels/` also covers `/reels/<id>/`, which opens a reel inside the scrollable Reels feed.
-    private static let blockedPrefixes = ["/reels/", "/explore/"]
-    /// Exceptions to `blockedPrefixes`: account search lives under Explore on mobile.
-    private static let allowedPrefixes = ["/explore/search/"]
-    private static let singleReelPrefix = "/reel/"
-    /// Instagram's own search button links to `/explore/`: open search rather than the Explore grid.
-    private static let redirects = ["/explore/": URL(string: "https://www.instagram.com/explore/search/")!]
-
-    static func decision(for url: URL, allowSingleReels: Bool) -> Decision {
+    static func decision(for url: URL, service: Service, allowSingleReels: Bool) -> Decision {
         switch url.scheme?.lowercased() {
         case "http", "https":
             break
@@ -32,16 +23,17 @@ enum URLPolicy {
         default:
             return .openExternally
         }
-        guard let host = url.host()?.lowercased(), isInstagramHost(host) else {
-            return .openExternally
-        }
+        guard let host = url.host()?.lowercased() else { return .openExternally }
         let path = normalizedPath(url.path(percentEncoded: false))
-        if let target = redirects[path] { return .redirect(target) }
-        return isBlockedPath(path, allowSingleReels: allowSingleReels) ? .block : .allow
-    }
-
-    private static func isInstagramHost(_ host: String) -> Bool {
-        host == "instagram.com" || host.hasSuffix(".instagram.com")
+        switch service {
+        case .instagram:
+            guard Instagram.isHost(host) else { return .openExternally }
+            if let target = Instagram.redirects[path] { return .redirect(target) }
+            return Instagram.isBlockedPath(path, allowSingleReels: allowSingleReels) ? .block : .allow
+        case .youtube:
+            guard YouTube.isHost(host) else { return .openExternally }
+            return YouTube.isBlockedPath(path) ? .block : .allow
+        }
     }
 
     /// Lowercased, with a trailing slash so `/reels` matches `/reels/`.
@@ -50,9 +42,37 @@ enum URLPolicy {
         return path.hasSuffix("/") ? path : path + "/"
     }
 
-    private static func isBlockedPath(_ path: String, allowSingleReels: Bool) -> Bool {
-        if allowedPrefixes.contains(where: path.hasPrefix) { return false }
-        if blockedPrefixes.contains(where: path.hasPrefix) { return true }
-        return !allowSingleReels && path.hasPrefix(singleReelPrefix)
+    private enum Instagram {
+        /// `/reels/` also covers `/reels/<id>/`, which opens a reel inside the scrollable Reels feed.
+        static let blockedPrefixes = ["/reels/", "/explore/"]
+        /// Exceptions to `blockedPrefixes`: account search lives under Explore on mobile.
+        static let allowedPrefixes = ["/explore/search/"]
+        static let singleReelPrefix = "/reel/"
+        /// Instagram's own search button links to `/explore/`: open search rather than the Explore grid.
+        static let redirects = ["/explore/": URL(string: "https://www.instagram.com/explore/search/")!]
+
+        static func isHost(_ host: String) -> Bool {
+            host == "instagram.com" || host.hasSuffix(".instagram.com")
+        }
+
+        static func isBlockedPath(_ path: String, allowSingleReels: Bool) -> Bool {
+            if allowedPrefixes.contains(where: path.hasPrefix) { return false }
+            if blockedPrefixes.contains(where: path.hasPrefix) { return true }
+            return !allowSingleReels && path.hasPrefix(singleReelPrefix)
+        }
+    }
+
+    private enum YouTube {
+        /// Also Google's domain: sign-in (accounts.google.com) and cookie consent must stay in the WebView,
+        /// or the session is created in Safari instead.
+        static func isHost(_ host: String) -> Bool {
+            ["youtube.com", "google.com"].contains { host == $0 || host.hasSuffix("." + $0) } || host == "youtu.be"
+        }
+
+        /// A `shorts` path segment: `/shorts/<id>` (the Shorts player, which swipes to the next Short)
+        /// and a channel's Shorts tab (`/@name/shorts`). An exact segment, so `/@name.shorts` stays allowed.
+        static func isBlockedPath(_ path: String) -> Bool {
+            path.split(separator: "/").contains("shorts")
+        }
     }
 }

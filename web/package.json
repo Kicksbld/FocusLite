@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/instagram-filter.ts --bundle --format=iife --target=safari17 --banner:js='// Generated from web/src by `npm run build`. Do not edit.' --outfile=../FocusLite/Resources/instagram-filter.js",
+    "build": "esbuild src/instagram-filter.ts src/youtube-filter.ts --bundle --format=iife --target=safari17 --banner:js='// Generated from web/src by `npm run build`. Do not edit.' --outdir=../FocusLite/Resources",
     "typecheck": "tsc --noEmit",
     "test": "npm run -s build && node --test"
   },

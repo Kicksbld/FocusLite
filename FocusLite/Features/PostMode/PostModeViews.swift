@@ -30,7 +30,7 @@ struct PostModeSection: View {
     var body: some View {
         Section {
             if let endsAt = postMode.endsAt {
-                LabeledContent("Fin dans") {
+                LabeledContent("Temps restant") {
                     Countdown(endsAt: endsAt)
                 }
                 StopButton()
@@ -40,7 +40,7 @@ struct PostModeSection: View {
         } header: {
             Text("Mode Poster")
         } footer: {
-            Text("Débloque Instagram 15 minutes pour publier depuis l'app. Le blocage dur reste actif.")
+            Text("Débloque l'app Instagram pendant 15 minutes, le temps de publier un post ou une story. Les apps en blocage total restent bloquées.")
         }
     }
 }
@@ -54,7 +54,7 @@ private struct Countdown: View {
             Text(endsAt, style: .timer).monospacedDigit()
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Mode Poster, fin dans \(Text(endsAt, style: .timer))"))
+        .accessibilityLabel(Text("Mode Poster, temps restant \(Text(endsAt, style: .timer))"))
     }
 }
 
@@ -73,7 +73,7 @@ private struct StartButton: View {
         // Nothing to unlock when blocking is off.
         .disabled(auth.screenTime != .granted || !blocking.isEnabled)
         .alert(
-            "Mode Poster impossible",
+            "Impossible d'activer le Mode Poster",
             isPresented: Binding(
                 get: { postMode.errorMessage != nil },
                 set: { if !$0 { postMode.errorMessage = nil } }

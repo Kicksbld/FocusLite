@@ -24,7 +24,7 @@ class ShieldActionExtension: ShieldActionDelegate {
         }
         let content = UNMutableNotificationContent()
         content.title = "FocusLite"
-        content.body = "Touche pour ouvrir Instagram Lite"
+        content.body = "Touche pour ouvrir tes messages Instagram, sans les Reels."
         content.sound = .default
         content.userInfo = [DeepLink.userInfoKey: DeepLink.open(path: DeepLink.inboxPath).absoluteString]
         // Fixed identifier: pressing the button again replaces the notification instead of stacking.

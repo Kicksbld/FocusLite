@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 
-/// Navigation, window and script-message delegate of the Instagram WebView.
+/// Navigation, window and script-message delegate of a service's WebView.
 /// Applies `URLPolicy` to full page loads; the injected script covers in-page navigation.
 @MainActor
 final class WebViewCoordinator: NSObject {
@@ -43,7 +43,7 @@ extension WebViewCoordinator: WKNavigationDelegate {
             model.showBlockedToast()
             // Nothing to stay on (blocked first load): fall back to the home page.
             if webView.url == nil {
-                model.open(URLPolicy.home)
+                model.open(model.service.home)
             }
             return .cancel
         case .openExternally:
@@ -84,7 +84,7 @@ extension WebViewCoordinator: WKUIDelegate {
 }
 
 extension WebViewCoordinator: WKScriptMessageHandler {
-    /// Messages from `web/src/instagram-filter.ts`: `{ type: "navigation" | "blocked", url }`.
+    /// Messages from the filter script (`web/src/filter.ts`): `{ type: "navigation" | "blocked", url }`.
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let model,
               message.frameInfo.isMainFrame,
@@ -101,7 +101,7 @@ extension WebViewCoordinator: WKScriptMessageHandler {
             switch model.decision(for: url) {
             case .block:
                 model.showBlockedToast()
-                model.open(URLPolicy.home)
+                model.open(model.service.home)
             case .redirect:
                 model.open(url)
             case .allow, .openExternally:

@@ -2,7 +2,7 @@ import SwiftUI
 import WebKit
 
 /// Hosts the long-lived WebView owned by `BrowserModel`.
-struct InstagramWebView: UIViewRepresentable {
+struct BrowserWebView: UIViewRepresentable {
     let model: BrowserModel
 
     func makeUIView(context: Context) -> WKWebView {

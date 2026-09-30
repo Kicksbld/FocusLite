@@ -4,7 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AuthorizationManager.self) private var auth
     @Environment(BlockingSettings.self) private var blocking
-    @Environment(BrowserModel.self) private var browser
+    @Environment(BrowserStore.self) private var browsers
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -13,7 +13,7 @@ struct SettingsView: View {
                 if auth.screenTime != .granted {
                     Section {
                         Label(
-                            "Temps d'écran n'est pas autorisé : aucune app ne peut être bloquée.",
+                            "FocusLite n'a pas accès à Temps d'écran. Autorise-le plus bas pour pouvoir bloquer des apps.",
                             systemImage: "exclamationmark.triangle.fill"
                         )
                         .foregroundStyle(.orange)
@@ -26,7 +26,7 @@ struct SettingsView: View {
                         set: { blocking.setEnabled($0) }
                     ))
                 } footer: {
-                    Text("Désactiver retire tous les blocages.")
+                    Text("Désactivé, toutes tes apps redeviennent accessibles.")
                 }
                 .disabled(auth.screenTime != .granted)
 
@@ -34,12 +34,12 @@ struct SettingsView: View {
                     SelectionSection(
                         group: .redirect,
                         title: "Redirection",
-                        footer: "Mets Instagram ici. L'écran de blocage proposera d'ouvrir FocusLite."
+                        footer: "Ajoute Instagram ici. Quand tu l'ouvres, l'écran de blocage te propose de continuer dans FocusLite, sans les Reels."
                     )
                     SelectionSection(
                         group: .hardBlock,
-                        title: "Blocage dur",
-                        footer: "Mets TikTok et les autres apps à bloquer sans échappatoire."
+                        title: "Blocage total",
+                        footer: "Ajoute TikTok et les apps dont tu veux te passer complètement. L'écran de blocage ne propose que « Fermer »."
                     )
                 }
                 .disabled(auth.screenTime != .granted)
@@ -47,14 +47,14 @@ struct SettingsView: View {
                 PostModeSection()
 
                 Section {
-                    Toggle("Autoriser les reels uniques", isOn: Binding(
-                        get: { browser.allowSingleReels },
-                        set: { browser.setAllowSingleReels($0) }
+                    Toggle("Ouvrir les reels reçus en message", isOn: Binding(
+                        get: { browsers.instagram.allowSingleReels },
+                        set: { browsers.instagram.setAllowSingleReels($0) }
                     ))
                 } header: {
-                    Text("Navigateur")
+                    Text("Instagram")
                 } footer: {
-                    Text("Un reel reçu en message s'ouvre, mais le feed des Reels reste bloqué.")
+                    Text("Un reel partagé en message s'ouvre seul. Le fil des Reels reste bloqué.")
                 }
 
                 Section("Autorisations") {

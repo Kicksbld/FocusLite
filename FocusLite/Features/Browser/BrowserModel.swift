@@ -2,26 +2,29 @@ import Observation
 import UIKit
 import WebKit
 
-/// Owns the Instagram WebView for the app's whole lifetime, so the page survives
+/// Owns a service's WebView for the app's whole lifetime, so the page survives
 /// going back to the home screen.
 @MainActor
 @Observable
 final class BrowserModel {
+    let service: Service
     let webView: WKWebView
     /// Message of the toast currently shown, if any.
     private(set) var toast: String?
+    /// Instagram setting; the YouTube script ignores it.
     private(set) var allowSingleReels: Bool
 
     @ObservationIgnored private let coordinator = WebViewCoordinator()
     @ObservationIgnored private let filterScript: String
     @ObservationIgnored private var toastTask: Task<Void, Never>?
 
-    init() {
+    init(service: Service) {
+        self.service = service
         allowSingleReels = AppGroup.defaults.object(forKey: AppGroup.Key.browserAllowSingleReels) as? Bool ?? true
-        filterScript = Self.loadFilterScript()
+        filterScript = Self.loadFilterScript(named: service.filterScriptName)
 
         let configuration = WKWebViewConfiguration()
-        // Persistent cookies: the Instagram session survives app restarts.
+        // Persistent cookies: the session survives app restarts.
         configuration.websiteDataStore = .default()
         configuration.applicationNameForUserAgent = Self.safariApplicationName
         webView = WKWebView(frame: .zero, configuration: configuration)
@@ -42,11 +45,11 @@ final class BrowserModel {
         webView.isInspectable = true
         #endif
 
-        webView.load(URLRequest(url: URLPolicy.home))
+        webView.load(URLRequest(url: service.home))
     }
 
     func decision(for url: URL) -> URLPolicy.Decision {
-        URLPolicy.decision(for: url, allowSingleReels: allowSingleReels)
+        URLPolicy.decision(for: url, service: service, allowSingleReels: allowSingleReels)
     }
 
     /// Opens `url` according to `URLPolicy`: in the WebView, in Safari, or not at all.
@@ -64,7 +67,7 @@ final class BrowserModel {
     }
 
     func showBlockedToast() {
-        toast = "Reels bloqués"
+        toast = service.blockedMessage
         toastTask?.cancel()
         toastTask = Task {
             try? await Task.sleep(for: .seconds(2))
@@ -97,17 +100,17 @@ final class BrowserModel {
         }
     }
 
-    private static func loadFilterScript() -> String {
-        guard let url = Bundle.main.url(forResource: "instagram-filter", withExtension: "js"),
+    private static func loadFilterScript(named name: String) -> String {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "js"),
               let source = try? String(contentsOf: url, encoding: .utf8)
         else {
-            fatalError("instagram-filter.js is missing from the app bundle. Run `npm run build` in web/.")
+            fatalError("\(name).js is missing from the app bundle. Run `npm run build` in web/.")
         }
         return source
     }
 
     /// Appended to WebKit's own prefix, gives the exact iOS Safari User-Agent,
-    /// so instagram.com serves its mobile site.
+    /// so both sites serve their mobile version.
     private static var safariApplicationName: String {
         let version = UIDevice.current.systemVersion.split(separator: ".").prefix(2).joined(separator: ".")
         return "Version/\(version) Mobile/15E148 Safari/604.1"

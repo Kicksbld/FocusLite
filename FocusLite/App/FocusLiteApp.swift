@@ -5,7 +5,7 @@ struct FocusLiteApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var auth = AuthorizationManager()
     @State private var blocking = BlockingSettings()
-    @State private var browser = BrowserModel()
+    @State private var browsers = BrowserStore()
     @State private var postMode = PostModeModel()
 
     var body: some Scene {
@@ -13,7 +13,7 @@ struct FocusLiteApp: App {
             RootView()
                 .environment(auth)
                 .environment(blocking)
-                .environment(browser)
+                .environment(browsers)
                 .environment(postMode)
                 .environment(appDelegate.router)
         }

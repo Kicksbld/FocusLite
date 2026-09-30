@@ -24,25 +24,30 @@ private struct IntroPage: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("FocusLite")
                     .font(.largeTitle.bold())
-                Text("Garde l'utile d'Instagram, sans les Reels.")
+                Text("Garde l'essentiel d'Instagram et de YouTube, sans Reels ni Shorts.")
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }
 
             FeatureRow(
                 systemImage: "camera",
-                title: "Instagram Lite",
-                detail: "L'app Instagram est bloquée. À la place, FocusLite ouvre une version web sans Reels ni Explorer : messages, profils, posts et stories restent accessibles."
+                title: "Instagram sans Reels",
+                detail: "L'app Instagram est bloquée. FocusLite t'ouvre à la place Instagram sans Reels ni Explorer : messages, profils, posts et stories restent accessibles."
+            )
+            FeatureRow(
+                systemImage: "play.rectangle",
+                title: "YouTube sans Shorts",
+                detail: "Regarde des vidéos, suis tes chaînes et fais des recherches, sans jamais tomber sur un Short."
             )
             FeatureRow(
                 systemImage: "nosign",
-                title: "Blocage dur",
+                title: "Blocage total",
                 detail: "TikTok et les apps de ton choix sont bloquées, sans échappatoire."
             )
             FeatureRow(
                 systemImage: "square.and.arrow.up",
                 title: "Mode Poster",
-                detail: "Besoin de publier ? Instagram se débloque 15 minutes, puis se rebloque tout seul."
+                detail: "Besoin de publier ? L'app Instagram se débloque 15 minutes, puis se rebloque toute seule."
             )
 
             Spacer()
@@ -95,7 +100,7 @@ private struct PermissionsPage: View {
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 if auth.screenTime != .granted {
-                    Text("Sans Temps d'écran, FocusLite ne peut bloquer aucune app.")
+                    Text("Sans Temps d'écran, FocusLite ne peut bloquer aucune app. Les versions filtrées d'Instagram et de YouTube restent disponibles.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

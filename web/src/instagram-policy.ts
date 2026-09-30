@@ -1,12 +1,7 @@
-// URL rules shared by every interception point of the filter script.
+// Instagram URL rules, shared by every interception point of the filter script.
 // Mirrors the native URLPolicy (spec F4). Paths only: never CSS classes or UI text.
 
-export interface FilterConfig {
-  /** Allows single reels `/reel/<id>/`, typically received in DMs. */
-  allowSingleReels: boolean;
-}
-
-export const DEFAULT_CONFIG: FilterConfig = { allowSingleReels: true };
+import { type FilterConfig, normalizePath } from "./config.ts";
 
 /**
  * Always blocked. `/reels/` also covers `/reels/<id>/`, which opens a reel inside
@@ -25,17 +20,6 @@ const SINGLE_REEL_PREFIX = "/reel/";
  */
 const REDIRECTS = new Map([["/explore/", "/explore/search/"]]);
 
-/** Lowercased, percent-decoded, with a trailing slash so `/reels` matches `/reels/`. */
-function normalizePath(pathname: string): string {
-  let path = pathname;
-  try {
-    path = decodeURIComponent(path);
-  } catch {
-    // Malformed escapes: match on the raw path.
-  }
-  path = path.toLowerCase();
-  return path.endsWith("/") ? path : `${path}/`;
-}
 
 export function isBlockedPath(pathname: string, config: FilterConfig): boolean {
   const path = normalizePath(pathname);

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DEFAULT_CONFIG, isBlockedPath, isBlockedURL, redirectTarget } from "../src/policy.ts";
+import { DEFAULT_CONFIG } from "../src/config.ts";
+import { isBlockedPath, isBlockedURL, redirectTarget } from "../src/instagram-policy.ts";
 
 const base = "https://www.instagram.com/";
 const noSingleReels = { allowSingleReels: false };
