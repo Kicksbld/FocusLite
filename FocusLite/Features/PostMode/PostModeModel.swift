@@ -40,6 +40,15 @@ final class PostModeModel {
         refresh()
     }
 
+    /// Ends Post Mode early. Shields come back before the monitor stops; if stopping it
+    /// also triggers the Monitor extension's `intervalDidEnd`, that does the same thing again.
+    func stop() {
+        SelectionStore.postModeEndsAt = nil
+        BlockingManager.applyExpectedState()
+        DeviceActivityCenter().stopMonitoring([.postMode])
+        refresh()
+    }
+
     /// Reloads the end from the App Group, where the Monitor extension clears it.
     /// While the app is open, it also ends Post Mode itself when the countdown reaches zero.
     func refresh() {
