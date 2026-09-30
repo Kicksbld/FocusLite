@@ -8,7 +8,7 @@ struct RootView: View {
     var body: some View {
         Group {
             if onboardingCompleted {
-                SettingsView()
+                BrowserView()
             } else {
                 OnboardingView { onboardingCompleted = true }
             }
@@ -31,4 +31,5 @@ struct RootView: View {
     RootView()
         .environment(AuthorizationManager())
         .environment(BlockingSettings())
+        .environment(BrowserModel())
 }

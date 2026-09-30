@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// Main screen after onboarding: blocking toggle, the two app pickers and the permissions.
+/// Settings sheet, opened from the browser toolbar: blocking, app pickers, browser and permissions.
 struct SettingsView: View {
     @Environment(AuthorizationManager.self) private var auth
     @Environment(BlockingSettings.self) private var blocking
+    @Environment(BrowserModel.self) private var browser
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -42,11 +44,27 @@ struct SettingsView: View {
                 }
                 .disabled(auth.screenTime != .granted)
 
+                Section {
+                    Toggle("Autoriser les reels uniques", isOn: Binding(
+                        get: { browser.allowSingleReels },
+                        set: { browser.setAllowSingleReels($0) }
+                    ))
+                } header: {
+                    Text("Navigateur")
+                } footer: {
+                    Text("Un reel reçu en message s'ouvre, mais le feed des Reels reste bloqué.")
+                }
+
                 Section("Autorisations") {
                     PermissionsList()
                 }
             }
-            .navigationTitle("FocusLite")
+            .navigationTitle("Réglages")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }
+                }
+            }
         }
     }
 }

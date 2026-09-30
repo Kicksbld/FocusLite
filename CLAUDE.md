@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FocusLite is a personal iOS app (single user, sideloaded on the developer's iPhone). It combines two ideas: Opal-style app blocking through the Screen Time API, and SocialLite-style filtered Instagram (a `WKWebView` with injected JS/CSS that removes Reels and Explore).
 
-The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 4 (F4, JS part) are done. When you add new tooling, add its commands to the "Commands" section below.
+The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 5 (F4, native part) are done. When you add new tooling, add its commands to the "Commands" section below.
 
 ## Commands
 
@@ -80,7 +80,7 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 ### Instagram filtering (two layers)
 
 - **Native**: `WKNavigationDelegate.decidePolicyFor` applies `URLPolicy` to full page loads. It blocks `/reels/…` and `/explore/…` except search (`/explore/search/…`), and allows single reels `/reel/<id>/` when `allowSingleReels` is on. Everything else on instagram.com is allowed. External domains open in Safari. A blocked navigation is cancelled and shows a "Reels bloqués" toast.
-- **Injected JS** (`web/src/instagram-filter.ts`, injected at `.atDocumentStart`): instagram.com is a React SPA that changes pages through `history.pushState`/`replaceState`, which native code never sees. The script therefore patches `pushState`/`replaceState`, listens to `popstate`, posts `{ type: "navigation", url }` to `window.webkit.messageHandlers.focuslite`, and blocks forbidden paths on the JS side too. It also hides Reels and Explore links with CSS, re-applied by a throttled `MutationObserver`. It reads a native-injected config object (e.g. `allowSingleReels`) and must be idempotent.
+- **Injected JS** (`web/src/instagram-filter.ts`, injected at `.atDocumentStart`): instagram.com is a React SPA that changes pages through `history.pushState`/`replaceState`, which native code never sees. The script therefore patches `pushState`/`replaceState`, listens to `popstate`, posts `{ type: "navigation", url }` (allowed URL change) or `{ type: "blocked", url }` (native shows the toast) to `window.webkit.messageHandlers.focuslite`, and blocks forbidden paths on the JS side too. It also hides Reels and Explore links with CSS, re-applied by a throttled `MutationObserver`. It reads a native-injected config object (e.g. `allowSingleReels`) and must be idempotent.
 - **Selector rule**: target `href` attributes and URL paths only. Never use Instagram's obfuscated CSS classes or UI text, because both change often and the text depends on the interface language.
 - The script must stay testable on its own by pasting it into the console of desktop Safari in iPhone responsive mode.
 - The WebView uses `WKWebsiteDataStore.default()` (the session persists) and a recent iOS Safari User-Agent (to get the mobile site).
