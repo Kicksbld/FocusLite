@@ -1,19 +1,28 @@
 import SwiftUI
 
 struct RootView: View {
+    @AppStorage("onboarding.completed") private var onboardingCompleted = false
+    @Environment(AuthorizationManager.self) private var auth
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "hourglass")
-                .font(.largeTitle)
-            Text("FocusLite")
-                .font(.title.bold())
-            Text("Instagram sans Reels, TikTok bloqué.")
-                .foregroundStyle(.secondary)
+        Group {
+            if onboardingCompleted {
+                SettingsView()
+            } else {
+                OnboardingView { onboardingCompleted = true }
+            }
         }
-        .padding()
+        // Permissions can be revoked in Settings while the app is in the background.
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active {
+                Task { await auth.refresh() }
+            }
+        }
     }
 }
 
 #Preview {
     RootView()
+        .environment(AuthorizationManager())
 }
