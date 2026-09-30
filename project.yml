@@ -36,6 +36,10 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        CFBundleURLTypes:
+          - CFBundleURLName: com.killianboularand.focuslite
+            CFBundleURLSchemes:
+              - focuslite
     entitlements:
       path: FocusLite/FocusLite.entitlements
       properties:

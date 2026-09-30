@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FocusLite is a personal iOS app (single user, sideloaded on the developer's iPhone). It combines two ideas: Opal-style app blocking through the Screen Time API, and SocialLite-style filtered Instagram (a `WKWebView` with injected JS/CSS that removes Reels and Explore).
 
-The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 5 (F4, native part) are done. When you add new tooling, add its commands to the "Commands" section below.
+The spec, `cahier-des-charges.md` (in French), is the source of truth for scope, acceptance criteria and roadmap, so read the relevant section before starting any step. Steps 1 (skeleton) to 6 (F6, deep links) are done. When you add new tooling, add its commands to the "Commands" section below.
 
 ## Commands
 
@@ -89,6 +89,7 @@ Every target needs the `com.apple.developer.family-controls` entitlement and the
 ### Navigation and chrome
 
 - The app launches on `HomeView`, a list of services (`Service`: Instagram, YouTube later). Deep links open a service directly.
+- Deep links (`Shared/DeepLink.swift`) come from the `focuslite://` scheme (`onOpenURL`) or a notification tap (`AppDelegate`, the `UNUserNotificationCenterDelegate` set at launch). Both go through `DeepLinkRouter.pending`, handled in one place in `RootView`.
 - Inside a service, a thin native top bar holds FocusLite actions only ("Accueil" back to the list, later "Mode Poster"). Never duplicate the site's own navigation in native UI: back is the edge swipe, reload is pull-to-refresh.
 
 ## Rules from the spec (§3, §8)
