@@ -13,7 +13,7 @@ final class DeepLinkRouter {
 
 /// Receives notification taps. It must be the notification center's delegate before
 /// launch ends, or a tap that launches the app is lost.
-final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+final class AppDelegate: NSObject, UIApplicationDelegate {
     let router = DeepLinkRouter()
 
     func application(
@@ -23,13 +23,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
         return true
     }
+}
 
+/// Main-actor conformance with the completion-handler variant: UIKit requires the handler
+/// on the main thread. The `async` variant calls it from a background thread and crashes.
+extension AppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
     /// The Shield Action extension (F3) puts the deep link in `userInfo[DeepLink.userInfoKey]`.
-    /// Nonisolated because the notification objects aren't `Sendable`: only the link string crosses to the main actor.
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        defer { completionHandler() }
         guard let link = response.notification.request.content.userInfo[DeepLink.userInfoKey] as? String,
               let url = URL(string: link)
         else { return }
-        await MainActor.run { router.pending = url }
+        router.pending = url
     }
 }
